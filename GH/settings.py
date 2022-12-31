@@ -11,11 +11,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-from django.core.management.commands.runserver import Command as runserver
+# from django.core.management.commands.runserver import Command as runserver
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from datetime import timedelta
-
-# from decouple import config
+import dj_database_url
+from decouple import config
 
 from pathlib import Path
 
@@ -24,20 +24,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'q6ps3l++p9if3@q!x-=q2cp728ozxrcaw)sk$(gf15*o81**&r'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 # Application definition
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', [], cast=lambda v: [s.strip() for s in v.split(',')])
 
 # runserver.default_port = '8015'
 # runserver.default_addr = '127.0.0.1'
 
 LOG_DIR = os.path.join(BASE_DIR, "log")
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
 
 # Application definition ALLOWED_HOSTS = ['127.0.0.1','192.168.43.33','192.168.43.212' ,'192.168.137.177', '192.168.6.7']
 
@@ -57,7 +56,6 @@ INSTALLED_APPS = [
 ]
 
 APPEND_SLASH = False
-
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -91,40 +89,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'GH.wsgi.application'
 
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'GH2',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432'
-    }
-}
-
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-# DATABASE_ROUTERS = ['core.router.ApiRouter']
-# DATABASE_APPS_MAPPING = {'crm_data': 'crm_bd'}
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'djongo',
-#         'ENFORCE_SCHEMA': False,
-#         'NAME': 'USSD2',
-#         'CLIENT': {
-#             'host': '127.0.0.1',
-#         }
-#     }
-# }
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
+DATABASES = {
+    'default': dj_database_url.config(
+        default='postgresql://postgres:postgres@localhost:5432/mysite',
+        conn_max_age=600)}
 
 AUTH_USER_MODEL = 'hospital.User'
 # Password validation
@@ -185,6 +156,7 @@ REST_FRAMEWORK = {
 
 }
 # Set a time to live (5 minutes)
+CACHE_TTL = 60 * 5
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=3600),
