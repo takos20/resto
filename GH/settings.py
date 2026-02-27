@@ -11,29 +11,29 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-# from django.core.management.commands.runserver import Command as runserver
+from django.core.management.commands.runserver import Command as runserver
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from datetime import timedelta
-import dj_database_url
-from decouple import config
+
+# from decouple import config
 
 from pathlib import Path
-
+from decouple import config as env
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
-
+SECRET_KEY = env('SECRET_KEY')
+import dj_database_url
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 # Application definition
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', [], cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = ['*']
 
-# runserver.default_port = '8015'
-# runserver.default_addr = '127.0.0.1'
+runserver.default_port = '8016'
+runserver.default_addr = '127.0.0.1'
 
 LOG_DIR = os.path.join(BASE_DIR, "log")
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -47,21 +47,37 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     'corsheaders',
+    'track_actions',
     'rest_framework',
     'django_filters',
     'multiselectfield',
+    'dbbackup',
+    'crispy_forms',
+    'mathfilters',
     'hospital.apps.HospitalConfig',
+    'restaurants.apps.RestaurantsConfig',
 
 ]
-
+DBBACKUP_FILENAME_TEMPLATE = '{servername}-{datetime}.sql'
+# DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {'location': env('DBBACKUP_STORAGE_OPTIONS')}
 APPEND_SLASH = False
+BACKUP_STORAGE_FOLDER = env('BACKUP_STORAGE_FOLDER')
+DBBACKUP_STORAGE_FOLDER = env('DBBACKUP_STORAGE_FOLDER')
+DBBACKUP_ALL = env('DBBACKUP_ALL')
+FOLDER_DUMPBATA = env('FOLDER_DUMPBATA')
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'track_actions.requestMiddleware.RequestMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -89,13 +105,29 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'GH.wsgi.application'
 
+
+DATABASES = {
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'yummy3',
+#         'USER': 'postgres',
+#         'PASSWORD': 'postgres',
+#         'HOST': '127.0.0.1',
+#         'PORT': env('DB_PORT')
+#     }
+# }
+        #'HOST': '172.31.224.1',
+
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://postgres:postgres@localhost:5432/mysite',
-        conn_max_age=600)}
 
 AUTH_USER_MODEL = 'hospital.User'
 # Password validation
@@ -121,7 +153,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Douala'
 
 USE_I18N = True
 
@@ -135,41 +167,120 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CORS_ORIGIN_ALLOW_ALL = True
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.AllowAny',
+#         'rest_framework.permissions.IsAuthenticated',
+#     ),
+#     'DEFAULT_RENDERER_CLASSES': [
+#         'rest_framework.renderers.JSONRenderer',
+#     ],
+#     'DEFAULT_PARSER_CLASSES': [
+#         'rest_framework.parsers.JSONParser',
+#         'rest_framework.parsers.FormParser',
+#         'rest_framework.parsers.MultiPartParser'
+#     ],
+#     'DEFAULT_FILTER_BACKENDS': (
+#         'django_filters.rest_framework.DjangoFilterBackend',
+#     ),
+#     'DEFAULT_PAGINATION_CLASS': 'globals.pagination.CustomPagination',
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+#
+# }
+# Set a time to live (5 minutes)
 REST_FRAMEWORK = {
+    'DATETIME_FORMAT': "%Y-%m-%d %H:%M:%S",
+    'DEFAULT_PAGINATION_CLASS': 'globals.pagination.CustomPagination',
+    'PAGE_SIZE': None,
+    'NON_FIELD_ERRORS_KEY': 'errors',
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',
         'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
     ],
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'globals.pagination.CustomPagination',
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-
 }
-# Set a time to live (5 minutes)
-CACHE_TTL = 60 * 5
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=3600),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'VERIFYING_KEY': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'PAYLOAD_ID_FIELD': 'user_id',
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(hours=1),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
+}
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'large': {
+            'format': '%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s  %(lineno)d  %(message)s  '
+        },
+        'tiny': {
+            'format': '%(asctime)s  %(message)s  '
+        }
+    },
+    'handlers': {
+        'access_file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, "access.logs"),
+            'formatter': 'large',
+        },
+        'errors_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, "errors.logs"),
+            'formatter': 'large',
+        },
+        'http_client_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, "http_client.logs"),
+            'formatter': 'large',
+        },
+    },
+    'loggers': {
+        'access_file': {
+            'handlers': ['access_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'errors_file': {
+            'handlers': ['errors_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'http_client_file': {
+            'handlers': ['http_client_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    }
 }

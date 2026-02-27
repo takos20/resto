@@ -1,11 +1,15 @@
+import datetime
+from django.contrib.postgres.fields import JSONField
 from django import forms
-from hospital.models import User, Hospital, Departments, Medical_areas, Medical_act, Patient, Doctor, \
-    Ordinance, Appointment, Cash, Storage_depots, Expenses_nature, Cash_movement, Category, Shape, Product, \
-    Supplies, Suppliers, DetailsSupplies, DetailsBills, PatientSettlement, DetailsStock, Stock_movement, \
-    DetailsStock_movement, Inventory, DetailsInventory, Consultation, Background, Ordinance, Prescription, Examination, \
-    DCI
+from rest_framework import serializers
+
+from hospital.models import TYPE_ACTION, CateringInfo, DeliveryInfo, DetailsBillsIngredient, DetailsPatientAccount, DetailsStock_movement, Dish, EventInfo, Ingredient, PatientAccount,District, Insurance, Recipes, Stock_movement, Storage_depots, User, Hospital, Patient, \
+    Cash, Expenses_nature, Cash_movement, Category, \
+    Supplies, Suppliers, DetailsSupplies, DetailsBills,PatientSettlement, Inventory, DetailsInventory, \
+    Region, City, Module,  Type_patient
 from django.core.validators import RegexValidator
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
+# from django.utils.translation import ugettext_lazy as _
 from multiselectfield import MultiSelectField
 from hospital.models import Bills
 
@@ -19,204 +23,154 @@ DAYS_CHOICES = [
     ('SUNDAY', 'SUNDAY')
 ]
 
+SYMPTOMS_CHOICES = [
+    ('REDNESS', 'REDNESS'),
+    ('PAIN', 'PAIN'),
+    ('DECREASED_VISUAL_ACUITY', 'DECREASED_VISUAL_ACUITY'),
+    ('LTCH', 'LTCH'),
+    ('SECRETIONS', 'SECRETIONS')
+]
+
 
 class UserForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
     is_active = forms.BooleanField(initial=True, required=False)
     username = forms.CharField(required=True)
     createdAt = forms.CharField(required=False)
     code = forms.CharField(required=False)
     role = forms.CharField(required=False)
+    type = forms.CharField(required=False)
+    patient = forms.ModelChoiceField(required=False, queryset=Patient.objects.all())
     password = forms.CharField(required=True, widget=forms.PasswordInput, min_length=5, max_length=255)
 
     class Meta:
         model = User
-        fields = ('username', 'role', 'is_active', 'password', 'deleted','code')
+        fields = ('is_shared','hospital','username', 'role', 'is_active','type', 'password', 'patient', 'deleted', 'code')
 
 
 class CashForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
     code = forms.CharField(required=False)
     is_active = forms.BooleanField(initial=True, required=False)
-    cash_fund = forms.CharField(required=True)
-    createdAt = forms.CharField(required=False)
+    cash_fund = forms.IntegerField(required=False)
+    type_cash = forms.CharField(required=True)
 
     class Meta:
         model = Cash
-        fields = ('code', 'cash_fund', 'is_active', 'deleted')
+        fields = ('is_shared','hospital','code', 'cash_fund','type_cash', 'is_active', 'deleted')
 
 
-class UserFormDoctor(forms.ModelForm):
+class ModuleForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    name = forms.CharField(required=False)
     is_active = forms.BooleanField(initial=True, required=False)
-    username = forms.CharField(required=True)
-    createdAt = forms.CharField(required=False)
-    role = forms.CharField(required=False)
-    password = forms.CharField(required=True, widget=forms.PasswordInput, min_length=5, max_length=255)
 
     class Meta:
-        model = User
-        fields = ('username', 'role', 'is_active', 'password', 'deleted', 'doctor')
+        model = Module
+        fields = '__all__'
 
 
-class UserFormPatient(forms.ModelForm):
-    is_active = forms.BooleanField(initial=True, required=False)
-    username = forms.CharField(required=True)
-    createdAt = forms.CharField(required=False)
-    role = forms.CharField(required=False)
-    password = forms.CharField(required=True, widget=forms.PasswordInput, min_length=5, max_length=255)
+# class UserFormDoctor(forms.ModelForm):
+    #is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    #hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+#     is_active = forms.BooleanField(initial=True, required=False)
+#     username = forms.CharField(required=True)
+#     createdAt = forms.CharField(required=False)
+#     role = forms.CharField(required=False)
+#     password = forms.CharField(required=True, widget=forms.PasswordInput, min_length=5, max_length=255)
+#
+#     class Meta:
+#         model = User
+#         fields = ('is_shared','hospital','username', 'role', 'is_active', 'password', 'deleted', 'doctor')
 
-    class Meta:
-        model = User
-        fields = ('username', 'role', 'is_active', 'password', 'deleted', 'patient')
+
+# class UserFormPatient(forms.ModelForm):
+    #is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    #hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+#     is_active = forms.BooleanField(initial=True, required=False)
+#     username = forms.CharField(required=True)
+#     createdAt = forms.CharField(required=False)
+#     role = forms.CharField(required=False)
+#     password = forms.CharField(required=True, widget=forms.PasswordInput, min_length=5, max_length=255)
+#
+#     class Meta:
+#         model = User
+#         fields = ('is_shared','hospital','username', 'role', 'is_active', 'password', 'deleted', 'patient')
 
 
 class Expenses_natureForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
     code = forms.CharField(required=False)
     name = forms.CharField(required=False)
     nature = forms.CharField(required=False)
     account_number = forms.CharField(required=False)
     type = forms.CharField(required=False)
-
-    class Meta:
-        model = Expenses_nature
-        fields = ('code', 'type', 'name', 'nature', 'account_number')
-
-
-class Cash_movementForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    motive = forms.CharField(required=False)
-    name = forms.CharField(required=False)
-    name_movement = forms.CharField(required=False)
-    amount_movement = forms.IntegerField(required=False)
-    type = forms.CharField(required=False)
-
-    class Meta:
-        model = Cash_movement
-        fields = ('code', 'type', 'name', 'motive', 'name_movement', 'amount_movement')
-
-
-class AppointmentForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    problem = forms.CharField(required=False)
-    start_appointment_date = forms.CharField(required=False)
-    end_appointment_date = forms.CharField(required=False)
-
-    class Meta:
-        model = Appointment
-        fields = ('code','patient', 'doctor', 'problem', 'start_appointment_date','end_appointment_date')
-
-
-class PrescriptionForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
-    product_qte = forms.CharField(required=False)
-    product_nbr_fois = forms.CharField(required=False)
-    product_form = forms.CharField(required=False)
-
-    class Meta:
-        model = Prescription
-        fields = ('code','product', 'ordinance', 'product_qte', 'product_nbr_fois','product_form')
-class ExaminationForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
-    tension = forms.CharField(required=False)
-    perimeter = forms.CharField(required=False)
-    temperature = forms.CharField(required=False)
-    description_exam = forms.CharField(required=False)
-    results_exam = forms.CharField(required=False)
-
-    class Meta:
-        model = Examination
-        fields = ('code','user','patient', 'perimeter', 'tension', 'temperature','description_exam','results_exam')
-
-
-class OrdinanceForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
-    medication = forms.CharField(required=False)
-    period_medication = forms.CharField(required=False)
-
-    class Meta:
-        model = Ordinance
-        fields = ('code','patient', 'doctor', 'medication', 'period_medication')
-class BackgroundForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
-    description_back = forms.CharField(required=False)
-    category_back = forms.CharField(required=False)
-
-    class Meta:
-        model = Background
-        fields = ('code','patient', 'category_back', 'description_back')
-
-class ConsultationForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
-    reason = forms.CharField(required=False)
-    diagnostic = forms.CharField(required=False)
-
-    class Meta:
-        model = Consultation
-        fields = ('code','patient', 'doctor','background','ordinance','appointment', 'reason', 'diagnostic')
-
-
-class Storage_depotsForm(forms.ModelForm):
-    createdAt = forms.CharField(required=False)
-    code = forms.CharField(required=False)
-    name = forms.CharField(required=False)
-    name_responsible = forms.CharField(required=False)
-    default_depot = forms.BooleanField(initial=False, required=False)
-
-
-    class Meta:
-        model = Storage_depots
-        fields = ('code', 'name', 'name_responsible', 'username','default_depot')
-
-
-class DoctorForm(forms.ModelForm):
-    address = forms.CharField(max_length=255,required=False)
-    speciality = forms.CharField(max_length=255,required=False)
-    email = forms.EmailField(required=False)
-    createdAt = forms.CharField(max_length=255,required=False)
-    intervention_days = MultiSelectField(choices=DAYS_CHOICES, max_length=255)
-    position = forms.CharField(max_length=255, required=False)
-    coef = forms.CharField(max_length=255, required=False)
-    code = forms.CharField(max_length=255, required=False)
-    name = forms.CharField(max_length=255, required=False)
-    dateNaiss = forms.CharField(max_length=255, required=False)
-    dateService = forms.CharField(max_length=255, required=False)
-    phone = forms.CharField(required=True, min_length=9, max_length=12, validators=[
-        RegexValidator('^((6([5-9][0-9]{7})))$',
-                       _('Enter a valid phone format'))
-    ])
-
-    class Meta:
-        model = Doctor
-        fields = (
-            'email', 'position', 'phone', 'coef', 'department',
-            'name', 'dateNaiss', 'dateService', 'intervention_days', 'address', 'speciality')
-
-
-class ProductForm(forms.ModelForm):
-    barcode = forms.CharField(required=False)
-    code = forms.CharField(required=False)
-    name = forms.CharField(required=False)
-    dosage = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
-    public_price = forms.FloatField(required=False)
-    purchase_price = forms.FloatField(required=False)
-    margin = forms.FloatField(required=False)
-    qte_stock = forms.IntegerField(required=False)
-    conditioning = forms.CharField(max_length=255, required=False)
-    # expiry_date = forms.CharField(max_length=255, required=False)
     is_active = forms.BooleanField(initial=True, required=False)
 
     class Meta:
-        model = Product
-        fields = (
-            'code', 'barcode','name', 'qte_stock','dci1', 'dci2', 'dosage',
-            'conditioning', 'margin', 'category', 'shape', 'public_price', 'purchase_price', 'is_active')
+        model = Expenses_nature
+        fields = ('is_shared','hospital','code', 'type', 'name', 'nature', 'account_number', 'is_active')
 
+
+class Cash_movementForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    code = forms.CharField(required=False)
+    motive = forms.CharField(required=False)
+    expenses_nature = forms.ModelChoiceField(required=False, queryset=Expenses_nature.objects.all())
+    cash_destination = forms.ModelChoiceField(required=False, queryset=Cash.objects.all())
+    cash_origin = forms.ModelChoiceField(required=False, queryset=Cash.objects.all())
+    amount_movement = forms.IntegerField(required=False)
+    difference = forms.IntegerField(required=False)
+    physical_amount = forms.IntegerField(required=False)
+    type = forms.CharField(required=False)
+    type_cash_movement = forms.CharField(required=False)
+
+    class Meta:
+        model = Cash_movement
+        fields = ('is_shared','difference','hospital','code', 'type','type_cash_movement', 'motive', 'physical_amount','amount_movement', 'expenses_nature', 'cash_origin', 'cash_destination')
+
+
+class PatientAccountForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    patient = forms.ModelChoiceField(required=False, queryset=Patient.objects.all())
+    balance = forms.CharField(required=False)
+    type_account = forms.CharField(required=False)
+
+    class Meta:
+        model = PatientAccount
+        fields = ('is_shared','hospital',
+            'balance', 'type_account', 'patient')
+
+class InsuranceForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    code = forms.CharField(required=False)
+    name = forms.CharField(required=False)
+    number = forms.CharField(required=False)   
+    email = forms.EmailField(required=False) 
+    phone = forms.CharField(required=False)    
+    location = forms.CharField(required=False)    
+    mailbox = forms.CharField(required=False)
+    responsible = forms.CharField(required=False)
+    createdAt = forms.CharField(required=False)
+    percent = forms.CharField(required=False)
+    is_active = forms.BooleanField(initial=True, required=False)
+    start_date = forms.CharField(required=False, empty_value=None)
+    end_date = forms.CharField(required=False, empty_value=None)
+
+    class Meta:
+        model = Insurance
+        fields = '__all__'
 
 class SuppliersForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
     code = forms.CharField(required=False)
     name = forms.CharField(required=False)
     phone = forms.CharField(required=False, min_length=9, max_length=12, validators=[
@@ -227,153 +181,346 @@ class SuppliersForm(forms.ModelForm):
         RegexValidator('^((6([5-9][0-9]{7})))$',
                        _('Enter a valid phone format'))
     ])
+    mailbox = forms.CharField(required=False)
+    city = forms.CharField(required=False)
+    country = forms.CharField(required=False)
+    fax = forms.CharField(required=False)
+    taxpayer_number = forms.CharField(required=False)
     name_representative = forms.CharField(required=False)
+    email = forms.CharField(required=False)
     createdAt = forms.CharField(required=False)
-    is_active = forms.BooleanField(initial=True, required=False)
 
     class Meta:
         model = Suppliers
-        fields = ('code', 'name', 'name_representative', 'phone_representative', 'phone', 'is_active')
+        fields = ('is_shared','hospital','code', 'name', 'name_representative', 'phone_representative', 'phone', 'mailbox', 'city', 'country', 'fax', 'taxpayer_number', 'email')
 
 
 class SuppliesForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    storage_depots = forms.ModelChoiceField(required=False, queryset=Storage_depots.objects.all())
     code = forms.CharField(required=False)
     reference_no = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
-    arrival_date = forms.DateTimeField(required=False)
     supply_amount = forms.IntegerField(required=False)
     additional_info = forms.CharField(max_length=255, required=False)
+    is_accounted = forms.BooleanField(initial=False, required=False)
 
     class Meta:
         model = Supplies
-        fields = (
-            'code', 'storage_depots','suppliers',
-            'additional_info', 'reference_no', 'supply_amount',
-            'arrival_date')
-class Stock_movementForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    type_movement = forms.CharField(required=False)
-    reason_movement = forms.CharField(required=False)
-    date_movement = forms.DateTimeField(required=False)
-    movement_value = forms.IntegerField(required=False)
+        fields = '__all__'
+class RecipesForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    dish = forms.ModelChoiceField(required=False, queryset=Dish.objects.all())
+    total_amount = forms.FloatField(required=False)
 
     class Meta:
-        model = Stock_movement
-        fields = (
-            'code', 'type_movement','reason_movement','storage_depots',
-            'date_movement','movement_value')
+        model = Recipes
+        fields = '__all__'
+class Storage_depotsForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    createdAt = forms.CharField(required=False)
+    code = forms.CharField(required=False)
+    name_language = serializers.JSONField(required=False)
+    is_active = forms.BooleanField(initial=True, required=False)
+    is_default = forms.BooleanField(initial=False, required=False)
+
+    class Meta:
+        model = Storage_depots
+        fields = ('is_shared','hospital','code', 'name_language', 'is_default', 'is_active')
+
+
 class InventoryForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    storage_depots = forms.ModelChoiceField(required=False, queryset=Storage_depots.objects.all())
     code = forms.CharField(required=False)
     reason_inventory = forms.CharField(required=False)
-    date_inventory = forms.DateTimeField(required=False)
 
     class Meta:
         model = Inventory
-        fields = (
-            'code','reason_inventory','storage_depots',
-            'date_inventory')
+        fields = '__all__'
+
+
 class BillsForm(forms.ModelForm):
-    advance = forms.IntegerField(required=False)
-    net_payable = forms.IntegerField(required=False)
-    balance = forms.IntegerField(required=False)
-    total_amount = forms.IntegerField(required=False)
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    district = forms.ModelChoiceField(required=False, queryset=District.objects.all())
+    cash = forms.ModelChoiceField(required=False, queryset=Cash.objects.all())
+    patient = forms.ModelChoiceField(required=False, queryset=Patient.objects.all())
+    storage_depots = forms.ModelChoiceField(required=False, queryset=Storage_depots.objects.all())
+    amount_received = forms.IntegerField(required=False)
+    amount_paid = forms.IntegerField(required=False)
+    net_payable = forms.CharField(required=False)
+    tva = forms.CharField(required=False)
+    ttc = forms.CharField(required=False)
+    insurance = forms.CharField(required=False)
+    insurance_patient = forms.CharField(required=False)
+    bills_amount = forms.CharField(required=False)
+    balance = forms.CharField(required=False)
+    refund = forms.CharField(required=False)
+    delivery = forms.CharField(required=False)
+    total_amount = forms.CharField(required=False)
     additional_info = forms.CharField(required=False)
     bill_type = forms.CharField(max_length=255, required=False)
+    payment_method = forms.CharField(max_length=255, required=False)
+    type_account = forms.CharField(max_length=255, required=False)
+    type_accommodation = forms.CharField(max_length=255, required=False)
+    bill_type_hospitalization = forms.CharField(max_length=255, required=False)
     bill_shape = forms.CharField(max_length=255, required=False)
     patient_type = forms.CharField(max_length=255, required=False)
-    bills_date = forms.CharField(max_length=255, required=False)
+    amount_om = forms.CharField(required=False)
+    amount_prepaid = forms.CharField(required=False)
+    amount_momo = forms.CharField(required=False)
+    amount_cash = forms.CharField(required=False)
+    amount_bank_card = forms.CharField(required=False)
+    phone_number = forms.IntegerField(required=False)
+    bank_card_number = forms.IntegerField(required=False)
+    transaction_ref_bank_card = forms.IntegerField(required=False)
+    transaction_ref_om = forms.IntegerField(required=False)
+    transaction_ref_momo = forms.IntegerField(required=False)
+    patient_name = forms.CharField(max_length=255, required=False)
+    cash_code = forms.CharField(max_length=255, required=False)
+    cashier_name = forms.CharField(max_length=255, required=False)
+    doctor_name = forms.CharField(max_length=255, required=False)
     code = forms.CharField(max_length=255, required=False)
+    is_proforma = forms.BooleanField(required=False)
+    is_proforma_valid = forms.BooleanField(required=False)
 
     class Meta:
         model = Bills
-        fields = (
-            'code', 'balance', 'net_payable', 'advance','patient','storage_depots','doctor','total_amount',
-            'additional_info', 'patient_type', 'bill_shape','bills_date',
-            'bill_type')
+        fields = '__all__'
+
+class Type_patientForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    title = forms.CharField(max_length=255, required=True)
+
+    class Meta:
+        model = Type_patient
+        fields = ('is_shared','hospital','title',)
+
 class PatientSettlementForm(forms.ModelForm):
-    payment = forms.IntegerField(required=False)
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    cash = forms.ModelChoiceField(required=False, queryset=Cash.objects.all())
+    amount_received = forms.IntegerField(required=False)
+    amount_paid = forms.IntegerField(required=False)
+    current_balance = forms.IntegerField(required=False)
+    new_balance = forms.IntegerField(required=False)
     wordings = forms.CharField(required=False)
+    payment_method = forms.CharField(required=False)
+    refund = forms.CharField(required=False)
     code = forms.CharField(max_length=255, required=False)
+    amount_om = forms.CharField(required=False)
+    amount_prepaid = forms.CharField(required=False)
+    amount_momo = forms.CharField(required=False)
+    amount_cash = forms.CharField(required=False)
+    amount_bank_card = forms.CharField(required=False)
+    phone_number = forms.IntegerField(required=False)
+    bank_card_number = forms.IntegerField(required=False)
+    transaction_ref_bank_card = forms.IntegerField(required=False)
+    transaction_ref_om = forms.IntegerField(required=False)
+    transaction_ref_momo = forms.IntegerField(required=False)
 
     class Meta:
         model = PatientSettlement
-        fields = (
-            'code', 'payment', 'wordings', 'patient')
-
-
-class DetailsSuppliesForm(forms.ModelForm):
-    quantity = forms.IntegerField(required=False)
-    total_amount = forms.IntegerField(required=False)
-    arrival_price = forms.IntegerField(required=False)
-    cmup = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
-
-    class Meta:
-        model = DetailsSupplies
-        fields = (
-            'quantity',
-            'cmup', 'total_amount',
-            'arrival_price' , 'product', 'supplies','createdAt')
-
-class DetailsStockForm(forms.ModelForm):
-    product_name = forms.CharField(required=False)
-    class Meta:
-        model = DetailsStock
-        fields = ('product_name',)
-class DetailsStock_movementForm(forms.ModelForm):
-    total_amount = forms.CharField(required=False)
-    unit_price = forms.CharField(required=False)
-    quantity = forms.CharField(required=False)
+        fields = '__all__'
+class Stock_movementForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    storage_depots = forms.ModelChoiceField(required=False, queryset=Storage_depots.objects.all())
+    storage_depots_dest = forms.ModelChoiceField(required=False, queryset=Storage_depots.objects.all())
+    code = forms.CharField(required=False)
     type_movement = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
+    reason_movement = forms.CharField(required=False)
+    is_valid = forms.CharField(required=False)
+    movement_value = forms.CharField(required=False)
+
+    class Meta:
+        model = Stock_movement
+        fields = ('is_shared','hospital',
+            'code', 'type_movement', 'reason_movement', 'storage_depots','storage_depots_dest', 'movement_value', 'is_valid')
+
+
+class DetailsStock_movementForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    total_amount = forms.CharField(required=False)
+    stock_movement = forms.ModelChoiceField(required=True, queryset=Stock_movement.objects.all())
+    storage_depots = forms.ModelChoiceField(required=False, queryset=Storage_depots.objects.all())
+    storage_depots_dest = forms.ModelChoiceField(required=False, queryset=Storage_depots.objects.all())
+    unit_price = forms.CharField(required=False)
+    quantity = forms.IntegerField(required=False)
+    stock_initial = forms.IntegerField(required=False)
+    type_movement = forms.CharField(required=False)
 
     class Meta:
         model = DetailsStock_movement
-        fields = ('total_amount','storage_depots','details_stock','type_movement','quantity', 'unit_price','createdAt')
+        fields = ('is_shared','hospital',
+            'total_amount', 'storage_depots','storage_depots_dest','stock_movement', 'ingredient', 'stock_initial', 'type_movement', 'quantity',
+            'unit_price')
+
+
 class DetailsInventoryForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    ingredient = forms.ModelChoiceField(required=False, queryset=Ingredient.objects.all())
+    inventory = forms.ModelChoiceField(required=False, queryset=Inventory.objects.all())
     amount = forms.CharField(required=False)
     amount_adjusted = forms.CharField(required=False)
     quantity_stock = forms.CharField(required=False)
     quantity_adjusted = forms.CharField(required=False)
     cmup = forms.CharField(required=False)
+
     class Meta:
         model = DetailsInventory
-        fields = ('amount','amount_adjusted','storage_depots','details_stock','quantity_adjusted','quantity_stock','cmup')
+        fields = ('is_shared','hospital',
+            'amount', 'amount_adjusted', 'ingredient','inventory', 'quantity_adjusted', 'quantity_stock',
+            'cmup')
+
+class DetailsSuppliesForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    supplies = forms.ModelChoiceField(required=False, queryset=Supplies.objects.all())
+    stock_initial = forms.IntegerField(required=False)
+    quantity = forms.IntegerField(required=False)
+    quantity_two = forms.IntegerField(required=False)
+    total_amount = forms.IntegerField(required=False)
+    business_unit = forms.IntegerField(required=False)
+    arrival_price = forms.IntegerField(required=False)
+    cmup = forms.DecimalField(required=False, decimal_places=2, max_digits=12)
+    type_product = forms.CharField(required=False)
+    ingredient = forms.ModelChoiceField(required=False, queryset=Ingredient.objects.all())
+
+    class Meta:
+        model = DetailsSupplies
+        fields = '__all__'
+
+
+
 class DetailsBillsForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    stock_initial = forms.IntegerField(required=False)
+    type_accommodation = forms.CharField(required=False)
     quantity_served = forms.IntegerField(required=False)
     quantity_ordered = forms.IntegerField(required=False)
-    amount_net = forms.IntegerField(required=False)
-    amount_gross = forms.IntegerField(required=False)
-    pun = forms.IntegerField(required=False)
-    pub = forms.IntegerField(required=False)
+    insurance = forms.CharField(required=False)
+    insurance_patient = forms.CharField(required=False)
+    amount_net = forms.CharField(required=False)
+    tva = forms.CharField(required=False)
+    amount_gross = forms.CharField(required=False)
+    share_doctor = forms.CharField(required=False)
+    pun = forms.CharField(required=False)
+    margin = forms.CharField(required=False)
+    pub = forms.CharField(required=False)
     delivery = forms.CharField(required=False)
-    createdAt = forms.CharField(required=False)
+    user = forms.ModelChoiceField(required=False, queryset=User.objects.all())
+    dish = forms.ModelChoiceField(required=False, queryset=Dish.objects.all())
+    storage_depots = forms.ModelChoiceField(required=False, queryset=Storage_depots.objects.all())
+    patient = forms.ModelChoiceField(required=False, queryset=Patient.objects.all())
     class Meta:
         model = DetailsBills
+        fields = '__all__'
+
+class DetailsBillsIngredientForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)
+    is_treated = forms.BooleanField(initial=False, required=False)
+    hospital = forms.ModelChoiceField(
+        required=False,
+        queryset=Hospital.objects.all()
+    )
+    details_bills = forms.ModelChoiceField(
+        required=False,
+        queryset=DetailsBills.objects.all()
+    )
+    item_uid = forms.CharField(required=True)
+    action = forms.ChoiceField(
+        choices=TYPE_ACTION,
+        required=False
+    )
+    quantity = forms.FloatField()
+    total_amount = forms.FloatField()
+    impact_price = forms.FloatField(required=False)
+
+    class Meta:
+        model = DetailsBillsIngredient
         fields = (
-            'quantity_served','details_stock','storage_depots','medical_act','quantity_ordered','amount_gross',
-            'pub','pun', 'delivery', 'createdAt',
-            'amount_net')
+            'is_treated',
+            'is_shared',
+            'hospital',
+            'details_bills',
+            'item_uid',
+            'action',
+            'quantity',
+            'total_amount',
+            'impact_price'
+        )
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        uid = self.cleaned_data['item_uid']  # "ingredient-147"
+
+        model_type, obj_id = uid.split('-')
+        obj_id = int(obj_id)
+
+        if model_type == "ingredient":
+            instance.ingredient_id = obj_id
+            instance.compose_ingredient = None
+
+        elif model_type == "compose":
+            instance.compose_ingredient_id = obj_id
+            instance.ingredient = None
+
+        if commit:
+            instance.save()
+
+        return instance
+class DetailsPatientAccountForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    balance = forms.CharField(required=False)
+    type_operation = forms.CharField(required=False)
+    user = forms.ModelChoiceField(required=False, queryset=User.objects.all())
+    patient_account = forms.ModelChoiceField(required=False, queryset=PatientAccount.objects.all())
+
+    class Meta:
+        model = DetailsPatientAccount
+        fields = ('is_shared','hospital','balance', 'user','type_operation','patient_account')
+
+
+class Type_patientForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    title = forms.CharField(max_length=255, required=True)
+
+    class Meta:
+        model = Type_patient
+        fields = ('is_shared','hospital','title',)
 
 
 class PatientForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
     email = forms.EmailField(required=False)
-    createdAt = forms.CharField(required=False)
-    phone = forms.CharField(required=True, min_length=9, max_length=12, validators=[
+    phone = forms.CharField(required=False, min_length=9, max_length=12, validators=[
         RegexValidator('^((6([5-9][0-9]{7})))$',
                        _('Enter a valid phone format'))
     ])
     name = forms.CharField(max_length=255, required=True)
-    dateNaiss = forms.CharField(max_length=255, required=True)
+    dateNaiss = forms.CharField(max_length=255, required=False)
     child = forms.CharField(max_length=255, required=False)
     date_id = forms.CharField(max_length=255, required=False)
     number_id = forms.CharField(max_length=255, required=False)
     maritalStatus = forms.CharField(max_length=255, required=False)
     emergency_contact = forms.CharField(max_length=255, required=False)
     emergency_name = forms.CharField(max_length=255, required=False)
-    mother_name = forms.CharField(max_length=255, required=True)
+    mother_name = forms.CharField(max_length=255, required=False)
     type_id = forms.CharField(max_length=255, required=False)
-    religion = forms.CharField(max_length=255, required=True)
+    religion = forms.CharField(max_length=255, required=False)
     pathologies = forms.CharField(max_length=255, required=False)
     allergies = forms.CharField(max_length=255, required=False)
     blood_group = forms.CharField(max_length=255, required=False)
@@ -383,6 +530,8 @@ class PatientForm(forms.ModelForm):
     bpm = forms.CharField(max_length=255, required=False)
     temperature = forms.CharField(max_length=255, required=False)
     padiasto = forms.CharField(max_length=255, required=False)
+    number = forms.CharField(max_length=255, required=False)
+    primary_insured = forms.CharField(max_length=255, required=False)
     pasysto = forms.CharField(max_length=255, required=False)
     gender = forms.CharField(max_length=255, required=False)
     other_phone = forms.CharField(required=False, min_length=9, max_length=12, validators=[
@@ -390,29 +539,37 @@ class PatientForm(forms.ModelForm):
                        _('Enter a valid phone format'))
     ])
     age = forms.CharField(max_length=255, required=False)
-    insurance_name = forms.CharField(max_length=255, required=False)
-    insurance_number = forms.CharField(max_length=255, required=False)
-    shape = forms.CharField(max_length=255, required=True)
-    address = forms.CharField(max_length=255, required=True)
+    is_assured = forms.BooleanField(initial=False, required=False)
+    is_default = forms.BooleanField(initial=False, required=False)
+    district = forms.CharField(max_length=255, required=False)
+    address = forms.CharField(max_length=255, required=False)
     code = forms.CharField(max_length=255, required=False)
+    type_patient = forms.ModelChoiceField(required=False, queryset=Type_patient.objects.all())
+    city = forms.ModelChoiceField(required=False, queryset=City.objects.all())
+    insurance = forms.ModelChoiceField(required=False, queryset=Insurance.objects.all())
 
     class Meta:
         model = Patient
-        fields = (
-            'email', 'shape', 'code', 'phone', 'address',
-            'name', 'dateNaiss', 'insurance_name', 'age', 'other_phone', 'gender',
-            'pasysto', 'padiasto', 'temperature', 'bpm', 'size', 'electrophoresis', 'weight', 'blood_group',
-            'allergies', 'pathologies', 'religion', 'type_id', 'mother_name', 'emergency_name', 'emergency_contact',
-            'maritalStatus', 'number_id', 'date_id', 'child')
+        fields = '__all__'
 
-
-class HospitalForm(forms.ModelForm):
+class HospitalFormRule(forms.ModelForm):
     # depart = forms.CharField(max_length=255, required=False)
+    use_delivery = forms.BooleanField(initial=False, required=False)
+    price_hospitalization = forms.IntegerField(required=False)
+    rules_reduction = serializers.JSONField(required=False)
+    stock_min_peremption = forms.CharField(required=False)
     taxpayer = forms.CharField(required=False)
+    consultation_time = forms.CharField(required=False)    
+    days_before_expiry_date = forms.CharField(required=False)    
+    start_day_work = forms.CharField(required=False)
+    end_day_work = forms.CharField(required=False)
     address = forms.CharField(required=True)
+    deductible_VAT = forms.CharField(required=False)
+    type_enterprise = forms.CharField(required=False)
+    VAT_collected = forms.CharField(required=False)
     slogan = forms.CharField(required=False)
     zip_code = forms.CharField(required=False)
-    logo = forms.CharField(required=False)
+    logo = forms.FileField(required=False)
     phone = forms.CharField(required=True, min_length=9, max_length=12, validators=[
         RegexValidator('^((6([5-9][0-9]{7})))$',
                        _('Enter a valid phone format'))
@@ -420,112 +577,186 @@ class HospitalForm(forms.ModelForm):
 
     class Meta:
         model = Hospital
-        fields = (
-            'name', 'address', 'phone', 'deleted', 'logo', 'zip_code', 'slogan', 'taxpayer', 'email')
+        fields = ('name', 'consultation_time','use_delivery', 'rules_reduction', 'deductible_VAT','type_enterprise','days_before_expiry_date','VAT_collected','address','start_day_work', 'end_day_work', 'phone', 'deleted', 'stock_min_peremption', 'logo', 'zip_code',
+            'slogan', 'taxpayer', 'email')
 
-
-
-class DepartmentsForm(forms.ModelForm):
-    name = forms.CharField(max_length=255, required=False)
-
-    class Meta:
-        model = Departments
-        fields = ('name',)
-
-
-class Medical_areasForm(forms.ModelForm):
-    code = forms.CharField(required=False)
-    name = forms.CharField(max_length=255, required=False)
-    normal = forms.CharField(max_length=255, required=False)
-    covered = forms.CharField(max_length=255, required=False)
-    employee = forms.CharField(max_length=255, required=False)
-    indigent = forms.CharField(max_length=255, required=False)
-    quote_internal = forms.CharField(max_length=255, required=False)
-    quote_external = forms.CharField(max_length=255, required=False)
-    number_account = forms.CharField(max_length=255, required=False)
-
-    class Meta:
-        model = Medical_areas
-        fields = ('code','name', 'normal','employee','indigent','covered', 'quote_internal', 'quote_external', 'number_account')
-
-
-class Medical_actFormUpdate(forms.ModelForm):
-    code = forms.CharField(required=False)
-    name = forms.CharField(max_length=255, required=False)
-    coefficient = forms.CharField(max_length=255, required=False)
-    quote_internal = forms.CharField(max_length=255, required=False)
-    quote_external = forms.CharField(max_length=255, required=False)
-    price = forms.CharField(max_length=255, required=False)
+class HospitalForm(forms.ModelForm):
+    # depart = forms.CharField(max_length=255, required=False)
+    use_delivery = forms.BooleanField(initial=False, required=False)
+    price_hospitalization = forms.IntegerField(required=False)
+    stock_min_peremption = forms.CharField(required=False)
+    taxpayer = forms.CharField(required=False)
+    consultation_time = forms.CharField(required=False)    
+    days_before_expiry_date = forms.CharField(required=False)    
+    start_day_work = forms.CharField(required=False)
+    end_day_work = forms.CharField(required=False)
+    address = forms.CharField(required=True)
+    deductible_VAT = forms.CharField(required=False)
+    type_enterprise = forms.CharField(required=False)
+    VAT_collected = forms.CharField(required=False)
+    slogan = forms.CharField(required=False)
+    zip_code = forms.CharField(required=False)
+    logo = forms.FileField(required=False)
+    phone = forms.CharField(required=True, min_length=9, max_length=12, validators=[
+        RegexValidator('^((6([5-9][0-9]{7})))$',
+                       _('Enter a valid phone format'))
+    ])
 
     class Meta:
-        model = Medical_act
-        fields = ('code','name', 'coefficient', 'quote_internal', 'quote_external', 'price', 'medical_areas')
-
+        model = Hospital
+        fields = ('name', 'consultation_time','use_delivery', 'deductible_VAT','type_enterprise','days_before_expiry_date','VAT_collected','address','start_day_work', 'end_day_work', 'phone', 'deleted', 'stock_min_peremption', 'logo', 'zip_code',
+            'slogan', 'taxpayer', 'email')
 
 class CategoryForm(forms.ModelForm):
-    name = forms.CharField(max_length=255, required=False)
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    # hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    name_language = serializers.JSONField(required=False)
     code = forms.CharField(max_length=255, required=False)
     billable = forms.CharField(max_length=255, required=False)
     is_active = forms.BooleanField(initial=True, required=False)
 
     class Meta:
         model = Category
-        fields = ('name', 'code', 'billable', 'medical_areas', 'is_active')
+        fields = '__all__'
 
 
-class ShapeForm(forms.ModelForm):
+class RegionForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
     name = forms.CharField(max_length=255, required=False)
-    code = forms.CharField(max_length=255, required=False)
-    is_active = forms.BooleanField(initial=True, required=False)
 
     class Meta:
-        model = Shape
-        fields = ('name', 'code', 'is_active')
-class DCIForm(forms.ModelForm):
+        model = Region
+        fields = ('is_shared','hospital','name',)
+
+
+class CityForm(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    region = forms.ModelChoiceField(required=False, queryset=Region.objects.all())
     name = forms.CharField(max_length=255, required=False)
-    code = forms.CharField(max_length=255, required=False)
 
     class Meta:
-        model = DCI
-        fields = ('name', 'code')
+        model = City
+        fields = ('is_shared','hospital','name', 'region',)
 
-
-class Medical_actForm(forms.ModelForm):
+class DistrictForm(forms.ModelForm):
+    is_default = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
+    city = forms.ModelChoiceField(required=False, queryset=City.objects.all())
     name = forms.CharField(max_length=255, required=False)
-    coefficient = forms.CharField(max_length=255, required=False)
-    quote_internal = forms.CharField(max_length=255, required=False)
-    quote_external = forms.CharField(max_length=255, required=False)
-    price = forms.CharField(max_length=255, required=False)
 
     class Meta:
-        model = Medical_act
-        fields = ('name', 'coefficient', 'quote_internal', 'quote_external', 'price')
-
+        model = District
+        fields = ('is_shared','is_default','hospital','name', 'city',)
 
 class UserFormUpdate(forms.ModelForm):
+    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
+    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
     password = forms.CharField(required=False, widget=forms.PasswordInput, min_length=3, max_length=15)
     is_active = forms.BooleanField(initial=True, required=False)
     username = forms.CharField(required=False)
     role = forms.CharField(required=False)
+    type = forms.CharField(required=False)
+    patient = forms.ModelChoiceField(required=False, queryset=Patient.objects.all())
     deleted = forms.CharField(required=False)
 
     class Meta:
         model = User
-        fields = ('username', 'role', 'is_active', 'deleted')
+        fields = ('is_shared','hospital','username', 'role', 'is_active', 'type', 'password', 'patient', 'deleted')
 
     def save(self, commit=True):
         user = super(UserFormUpdate, self).save(commit=False)
         password = self.cleaned_data["password"]
+        print(user.id)
         if password:
             user.set_password(password)
+        else:
+            get_user = User.objects.filter(id=user.id).last()
+            user.password = get_user.password
         if commit:
             user.save()
         return user
+        
 
 
 class HospitalUserForm(forms.Form):
     hospitals = forms.ModelMultipleChoiceField(Hospital.objects.filter(deleted=False))
 
 
-class HospitalDepartmentForm(forms.Form):
-    departments = forms.ModelMultipleChoiceField(Hospital.objects.filter(deleted=False))
+
+class DeliveryInfoForm(forms.ModelForm):
+    bills = forms.ModelChoiceField(queryset=Bills.objects.all(), required=False)
+
+    address = forms.CharField(widget=forms.Textarea, required=True)
+    delivery_fee = forms.CharField(required=False)
+    delivery_service = forms.CharField(required=False)
+    delivery_man = forms.CharField(required=False)
+
+    expected_duration = forms.CharField(required=False)
+    delivered = forms.BooleanField(required=False)
+
+    class Meta:
+        model = DeliveryInfo
+        fields = (
+            'bills',
+            'address',
+            'delivery_fee',
+            'delivery_service',
+            'delivery_man',
+            'expected_duration',
+            'delivered'
+        )
+class CateringInfoForm(forms.ModelForm):
+    bills = forms.ModelChoiceField(queryset=Bills.objects.all(), required=False)
+
+    company_name = forms.CharField(required=True)
+    event_date = forms.CharField(required=True)
+    event_location = forms.CharField(widget=forms.Textarea, required=True)
+
+    advance_payment = forms.CharField(required=False)
+    balance_due = forms.CharField(required=False)
+
+    contact_person = forms.CharField(required=True)
+
+    class Meta:
+        model = CateringInfo
+        fields = (
+            'bills',
+            'company_name',
+            'event_date',
+            'event_location',
+            'advance_payment',
+            'balance_due',
+            'contact_person'
+        )
+
+class EventInfoForm(forms.ModelForm):
+    bills = forms.ModelChoiceField(queryset=Bills.objects.all(), required=False)
+
+    event_name = forms.CharField(required=True)
+    organizer = forms.CharField(required=True)
+    location = forms.CharField(widget=forms.Textarea, required=True)
+
+    event_start = forms.CharField(required=True)
+    event_end = forms.CharField(required=True)
+
+    estimated_guests = forms.CharField(required=True)
+    contract_amount = forms.CharField(required=False)
+
+    paid = forms.BooleanField(required=False)
+
+    class Meta:
+        model = EventInfo
+        fields = (
+            'bills',
+            'event_name',
+            'organizer',
+            'location',
+            'event_start',
+            'event_end',
+            'estimated_guests',
+            'contract_amount',
+            'paid'
+        )

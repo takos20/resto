@@ -1,84 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load humanize %}
 {% load static %}
 <head>
+    <style type="text/css">
+        @page {
+            size: a4;
+            margin: 1cm;
+        }
+
+        .table {
+            border: 0.5px solid #ababab;
+            text-align: center;
+            table-layout: fixed;
+            margin-bottom: 5px;
+        }
+
+        .table tr td {
+            white-space: nowrap;
+        }
+
+        .table th {
+            padding: 5px;
+            vertical-align: top;
+            background-color: #e8e8e8;
+        }
+
+        .table td {
+            padding: 5px;
+            vertical-align: top;
+            -pdf-keep-with-next: false;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+
+        }
+    </style>
 </head>
 
 <body>
 <table>
-<tr>
-            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:13px;" colspan="2" align="center">Analyse des factures</td>
-          </tr>
-<tr>
-        <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:13px;"  colspan="2" align="center">Du : {{date}}</td>
-      </tr><tr>
-        <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:13px;"  colspan="2" align="right">{{ Hospital }}</td>
-      </tr><tr>
-        <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:13px;"  colspan="2" align="right">Tel : {{ Contact }}</td>
-      </tr><tr>
-        <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:13px;"  colspan="2" align="right">{{ addresse }}</td>
-      </tr>
-<tr>
-            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:13px;" colspan="2" align="left">Code de la caisse: {{ cash_code }}</td>
-          </tr><tr>
-            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:13px;" colspan="2" align="left">Caissier: {{ cashier }} </td>
-          </tr>
-<tr>
-            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:13px;" colspan="2" align="left">Periode du: {{ start_date }} au : {{ end_date }}</td>
-          </tr>
-{#<tr>#}
-{#    <td colspan="2"><img src="logo.png" width="150"  /></td>#}
-{#  </tr>#}
 
-    <tr>
-    <td colspan="2">
-    <table class="table">
-
-    <tr>
-    <td colspan="2">&nbsp;</td>
-    </tr>
+    <div class="ui segment itemscard">
+        <div class="content">
+          <table >
+          
+            <tbody>
               <tr>
-            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:15px;"colspan="2">Facture</td>
-          </tr>
-    <thead>
-                        <tr style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; height:30px;margin-bottom: -50px;background-color: #E3F2FD;border-color: #E3F2FD;color:white; border-radius: 40px;">
-
-                            <th style="color: black">Reférence</th>
-                            <th style="color: black">Désignation article</th>
-                            <th style="color: black">Qté</th>
-                            <th style="color: black">P.U. Brut</th>
-                            <th style="color: black">R/se %</th>
-                            <th style="color: black">P.U. Net</th>
-                            <th style="color: black">Montant Brut</th>
-                            <th style="color: black">Montant Net</th>
-                        </tr>
-                    </thead>
-          <tbody>
-              {% for bill in bills %}
-
-                        <tr style="text-align: center;height: 30px">
-
-
-                            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333; "  height="22" align="center">{{bill.bill.code}}</td>
-                            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333; " height="22" align="center">{{bill.bill.name}}</td>
-                            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333; " height="22" align="center">{{bill.quantity_served}}</td>
-                            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333; " height="22" align="center">{{bill.pub}} FCFA</td>
-                            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333; " height="22" align="center">{{bill.delivery}}</td>
-                            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333; " height="22" align="center">{{bill.pun}} FCFA</td>
-                            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333; " height="22" align="center">{{bill.amount_gross}} FCFA</td>
-                            <td style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333; " height="22" align="center">{{bill.amount_net}} FCFA</td>
-                        </tr>
-
-                        {% endfor %}
-          </tbody>
-    <tr>
-    <td colspan="2">&nbsp;</td>
-    </tr>
-    </table>
-    </td>
-    </tr>
+                <td class="text-left" align="center" style="font-family:Verdana, Geneva, sans-serif; font-weight:900; font-size:20px;color: black" width="170">
+                  <img id="logo" style="border: 1px solid #ddd;
+          border-radius: 4px;
+          padding: 5px;
+          width: 200px;" src="/media/logo.png">
+                </td>
+                <td class="text-left" align="center" style="font-family:Verdana, Geneva, sans-serif; font-weight:500; font-size:18px">
+                </td>
+                <td class="text-left" align="center" style="font-family:Verdana, Geneva, sans-serif; font-weight:700; font-size:18px;color: black">
+                </td>
+                <td class="text-left" align="center" style="font-family:Verdana, Geneva, sans-serif; font-weight:500; font-size:18px;color: black">
+                </td>
+                <td class="text-left" align="center" style="font-family:Verdana, Geneva, sans-serif; font-weight:700; font-size:18px;color: black">
+                </td>
+                <td class="text-left" align="center" style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:18px;color: black" width="230">
+                  <div><span class="mono">{{ hospital.name }}</span></div>
+                  <div><span class="mono">{{ hospital.address }}</span></div>
+                  <div><span class="mono">Tel: {{ hospital.phone }}</span></div>
+                  <div><span class="mono">Email: {{ hospital.email }}</span></div>
+                </td>
+                
+              </tr>
+            </tbody>
+          </table>
+      
+        </div>
+      </div>
+      <br>
+    
 </table>
- </tr>
+<table>
+<tr>
+        <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:17px;" colspan="2"
+            align="center">LISTE DES FACTURES
+        </td>
+    </tr>
+
+</table>
+<table class="table">
+    <tr>
+        <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:15px;" colspan="3"
+            align="left">Total :{{ sum_total|intcomma }}</td>
+        <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:15px;text-align: left;" colspan="3" align="center">
+            Total payés : {{ sum_paid|intcomma }}</td>
+    <td style="font-family:Verdana, Geneva, sans-serif; font-weight:300; font-size:15px;text-align: left;" colspan="3" align="right">
+            Total impayés : {{ sum_unpaid|intcomma }}</td>
+    </tr>
+    <thead>
+    <tr>
+        <th style="color: black">Code</th>
+        <th style="color: black">Client</th>
+        <th style="color: black">Type patient</th>
+        <th style="color: black">Caissier</th>
+        <th style="color: black">Session de Caisse</th>
+        <th style="color: black">Montant</th>
+        <th style="color: black">Avance</th>
+        <th style="color: black">Rendu</th>
+        <th style="color: black">Date et heure</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for bill in bills %}
+        <tr style="text-align: center">
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.code }}</td>
+            <!-- <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">
+                {% for product in bill.details %}
+                
+                            {{ product.dish.name }}
+
+{% endfor %} -->
+                <!-- {{ bill.bill_type }} -->
+
+            </td>
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.patient.name }}</td>
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.patient.type_patient.title }}</td>
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.cash.user.username }}</td>
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.cash.code }}</td>
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.net_payable|floatformat:0 }}</td>
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.amount_paid|floatformat:0 }}</td>
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.refund|floatformat:0 }}</td>
+            <td class="td" style="font-family:Verdana, Geneva, sans-serif; font-size:9px;">{{ bill.createdAt }} {{ bill.timeAt }}</td>
+        </tr>
+
+    {% endfor %}
+    </tbody>
+</table>
+
+
 {#<td width="51%" valign="top"><table width="100%" border="0" cellspacing="0" cellpadding="0">#}
 {#      <div style="text-align:right"><span style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333;">Montant total:</span> {{MontantT}} FCFA</div>#}
 {#   <div style="text-align:right"><span style="font-family:Verdana, Geneva, sans-serif; font-weight:600; font-size:13px; border-top:1px solid #333; border-bottom:1px solid #333;">Montant perçu:</span> {{Advance}} FCFA</div>#}
