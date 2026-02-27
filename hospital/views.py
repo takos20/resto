@@ -69,7 +69,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 
 from .helpers import apply_promotions, apply_reduction, checkContent, checkContentPhone, destocker, destocker_compose, get_applicable_reduction, get_future_remise_notification, get_prepaid_account_detail, link_callback, archive, get_last_date_of_month, get_first_date_of_month, get_back, get_archive, \
-    delete_archive, backup, normalize_rules, restore, backup_all, setup_hospital_permissions, split_entry_exit
+    delete_archive, normalize_rules, restore, backup_all, setup_hospital_permissions, split_entry_exit
 
 
 def home_view(request):
