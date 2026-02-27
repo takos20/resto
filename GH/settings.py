@@ -236,51 +236,51 @@ SIMPLE_JWT = {
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'large': {
-            'format': '%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s  %(lineno)d  %(message)s  '
-        },
-        'tiny': {
-            'format': '%(asctime)s  %(message)s  '
-        }
-    },
-    'handlers': {
-        'access_file': {
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, "access.logs"),
-            'formatter': 'large',
-        },
-        'errors_file': {
-            'level': 'ERROR',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, "errors.logs"),
-            'formatter': 'large',
-        },
-        'http_client_file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, "http_client.logs"),
-            'formatter': 'large',
-        },
-    },
-    'loggers': {
-        'access_file': {
-            'handlers': ['access_file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'errors_file': {
-            'handlers': ['errors_file'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'http_client_file': {
-            'handlers': ['http_client_file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    }
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'large': {
+#             'format': '%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s  %(lineno)d  %(message)s  '
+#         },
+#         'tiny': {
+#             'format': '%(asctime)s  %(message)s  '
+#         }
+#     },
+#     'handlers': {
+#         'access_file': {
+#             'class': 'logging.FileHandler',
+#             'filename': os.path.join(LOG_DIR, "access.logs"),
+#             'formatter': 'large',
+#         },
+#         'errors_file': {
+#             'level': 'ERROR',
+#             'class': 'logging.FileHandler',
+#             'filename': os.path.join(LOG_DIR, "errors.logs"),
+#             'formatter': 'large',
+#         },
+#         'http_client_file': {
+#             'level': 'INFO',
+#             'class': 'logging.FileHandler',
+#             'filename': os.path.join(LOG_DIR, "http_client.logs"),
+#             'formatter': 'large',
+#         },
+#     },
+#     'loggers': {
+#         'access_file': {
+#             'handlers': ['access_file'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
+#         'errors_file': {
+#             'handlers': ['errors_file'],
+#             'level': 'ERROR',
+#             'propagate': False,
+#         },
+#         'http_client_file': {
+#             'handlers': ['http_client_file'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
+#     }
+# }
