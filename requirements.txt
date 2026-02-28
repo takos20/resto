@@ -42,6 +42,7 @@ python-decouple==3.8
 pytz==2023.3.post1
 PyYAML==6.0.1
 redis==5.0.7
+xhtml2pdf==0.2.11
 reportlab==3.6.13
 requests==2.32.5
 dj-database-url==2.2.0
@@ -54,4 +55,3 @@ tzdata==2023.3
 urllib3==2.5.0
 webencodings==0.5.1
 whitenoise==6.2.0
-xhtml2pdf==0.2.5
