@@ -123,7 +123,7 @@ class SyncService:
         }
 
         response = self.session.get(url, params=params)
-        print(url)
+        print(response)
         if response.status_code != 200:
             results['failed'] += 1
             return results

@@ -20,6 +20,9 @@ class SyncViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
 
+    def get_permissions(self):
+        return [AllowAny()]
+
 
     @action(detail=False, methods=["get"], url_path=r'(?P<model>[^/.]+)')
     def sync_model(self, request, model=None):
