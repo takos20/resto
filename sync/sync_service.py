@@ -15,182 +15,162 @@ class SyncService:
         self.hospital_id = hospital_id
         self.config = config
         self.session = self._create_session()
-    
+
     def _create_session(self):
         session = requests.Session()
         session.headers.update({
-            "X-SYNC-KEY": self.config.api_token,
+            "Authorization": f"Bearer {self.config.api_token}",
             "Content-Type": "application/json"
         })
         return session
-    def download_changes(self, force=False):
-        """
-        Télécharger les modifications du serveur distant
-        """
 
+    # ================= UPLOAD (Local → Remote) =================
+    def upload_changes(self, force=False):
         if not self.config.is_active:
-            logger.warning(f"Sync désactivée pour hospital {self.hospital_id}")
-            return None
+            return {'skipped': 0, 'failed': 0, 'success': 0, 'conflicts': 0}
 
         if not self.config.auto_sync and not force:
-            logger.info("Auto-sync désactivé")
-            return None
+            return {'skipped': 0, 'failed': 0, 'success': 0, 'conflicts': 0}
 
-        results = {
-            'success': 0,
-            'failed': 0,
-            'conflicts': 0,
-            'skipped': 0
-        }
+        results = {'success': 0, 'failed': 0, 'conflicts': 0, 'skipped': 0}
 
-        global_success = True
+        for model_name in self.config.models_to_sync:
+            try:
+                model_results = self._upload_model(model_name)
+                for k in results:
+                    results[k] += model_results.get(k, 0)
+            except Exception:
+                results['failed'] += 1
 
-        try:
-            for model_name in self.config.models_to_sync:
-                try:
-                    model_results = self._download_model(model_name)
+        self.config.last_sync_upload = timezone.now()
+        self.config.save()
+        return results
 
-                    for key in results.keys():
-                        results[key] += model_results.get(key, 0)
+    def _upload_model(self, model_name):
+        results = {'success': 0, 'failed': 0, 'conflicts': 0, 'skipped': 0}
 
-                except Exception as e:
-                    logger.exception(f"Erreur download model {model_name}: {e}")
-                    results['failed'] += 1
-                    global_success = False
+        app_label, model = model_name.split(".")
+        Model = apps.get_model(app_label, model)
 
-            # ✅ On met à jour le timestamp seulement si pas d’erreur critique
-            if global_success:
-                self.config.last_sync_download = timezone.now()
-                self.config.save(update_fields=['last_sync_download'])
+        last_sync = self.config.last_sync_upload or timezone.now() - timedelta(days=365)
 
-            logger.info(f"Download terminé pour hospital {self.hospital_id}: {results}")
-
-            return results
-
-        except Exception as e:
-            logger.exception(f"Erreur globale download_changes: {e}")
-            raise
-
-
-    def _download_model(self, model_path):
-        """
-        Télécharger les changements d'un modèle spécifique
-        """
-
-        results = {
-            'success': 0,
-            'failed': 0,
-            'conflicts': 0,
-            'skipped': 0
-        }
-
-        try:
-            app_label, model_name = model_path.split(".")
-            Model = apps.get_model(app_label, model_name)
-        except LookupError:
-            logger.error(f"Modèle {model_name} introuvable")
-            return results
-
-        last_sync = self.config.last_sync_download or (
-            timezone.now() - timedelta(days=365)
+        queryset = Model.objects.filter(
+            hospital_id=self.hospital_id,
+            updatedAt__gt=last_sync,
+            deleted=False
         )
 
-        url = f"{self.config.remote_api_url}/sync/{model_name.lower()}"
+        if hasattr(Model, 'is_shared'):
+            queryset = queryset.filter(is_shared=True)
 
-        params = {
-            'hospital_id': self.hospital_id,
-            'updated_since': last_sync.isoformat(),
-            'is_shared': False
-        }
-
-        try:
-            response = self.session.get(url, params=params, timeout=30)
-            response.raise_for_status()
-
-            remote_objects = response.json()
-
-            logger.info(
-                f"{len(remote_objects)} objets reçus pour {model_name}"
-            )
-
-            for remote_data in remote_objects:
-                try:
-                    result = self._download_object(
-                        remote_data,
-                        Model
-                    )
-                    results[result] += 1
-
-                except Exception as e:
-                    logger.exception(
-                        f"Erreur traitement objet {model_name}: {e}"
-                    )
-                    results['failed'] += 1
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Erreur HTTP download {model_name}: {e}")
-            results['failed'] += 1
+        for obj in queryset:
+            try:
+                result = self._upload_object(obj, model_name)
+                results[result] += 1
+            except Exception:
+                results['failed'] += 1
 
         return results
 
+    def _upload_object(self, obj, model_name):
+        url = f"{self.config.remote_api_url}/sync/{model_name.lower()}/"
+        data = self._serialize_object(obj)
+        data['hospital_id'] = self.hospital_id
+
+        response = self.session.post(url, json=data)
+
+        if response.status_code in [200, 201]:
+            return 'success'
+        if response.status_code == 409:
+            return 'conflicts'
+        return 'failed'
+
+    # ================= DOWNLOAD (Remote → Local) =================
+    def download_changes(self, force=False):
+        if not self.config.is_active:
+            return {'skipped': 0, 'failed': 0, 'success': 0, 'conflicts': 0}
+
+        results = {'success': 0, 'failed': 0, 'conflicts': 0, 'skipped': 0}
+
+        for model_name in self.config.models_to_sync:
+            try:
+                model_results = self._download_model(model_name)
+                for k in results:
+                    results[k] += model_results.get(k, 0)
+            except Exception:
+                results['failed'] += 1
+
+        self.config.last_sync_download = timezone.now()
+        self.config.save()
+        return results
+
+    def _download_model(self, model_name):
+        results = {'success': 0, 'failed': 0, 'conflicts': 0, 'skipped': 0}
+
+        app_label, model = model_name.split(".")
+        Model = apps.get_model(app_label, model)
+
+        last_sync = self.config.last_sync_download or timezone.now() - timedelta(days=365)
+
+        url = f"{self.config.remote_api_url}/sync/{model_name.lower()}/"
+        params = {
+            'hospital_id': self.hospital_id,
+            'updated_since': last_sync.isoformat(),
+            'is_shared': True
+        }
+
+        response = self.session.get(url, params=params)
+        if response.status_code != 200:
+            results['failed'] += 1
+            return results
+
+        for remote in response.json():
+            try:
+                self._download_object(remote, Model)
+                results['success'] += 1
+            except Exception:
+                results['failed'] += 1
+
+        return results
 
     @transaction.atomic
     def _download_object(self, remote_data, Model):
-        """
-        Synchroniser un objet individuel
-        Retourne: success | failed | conflicts | skipped
-        """
+        code = remote_data.get('code')
+        if not code:
+            return
 
-        remote_id = remote_data.get("id")
+        obj, created = Model.objects.get_or_create(
+            code=code,
+            hospital_id=self.hospital_id,
+            defaults=self._clean_data_for_create(remote_data)
+        )
 
-        if not remote_id:
-            return "failed"
+        if not created:
+            for k, v in self._clean_data_for_update(remote_data).items():
+                setattr(obj, k, v)
+            obj.save()
 
-        try:
-            local_obj = Model.objects.filter(id=remote_id).first()
+    # ================= UTILITIES =================
+    def _serialize_object(self, obj):
+        from django.forms.models import model_to_dict
+        data = model_to_dict(obj)
 
-            remote_updated_at = remote_data.get("updated_at")
-            remote_deleted = remote_data.get("is_deleted", False)
+        for k, v in data.items():
+            if isinstance(v, (datetime, timezone.datetime)):
+                data[k] = v.isoformat()
 
-            # -----------------------------
-            # 1️⃣ Objet inexistant localement
-            # -----------------------------
-            if not local_obj:
+        return data
 
-                if remote_deleted:
-                    return "skipped"
+    def _clean_data_for_create(self, data):
+        return {k: v for k, v in data.items() if k not in ['id', 'createdAt', 'updatedAt']}
 
-                Model.objects.create(**remote_data)
-                return "success"
+    def _clean_data_for_update(self, data):
+        return {k: v for k, v in data.items() if k not in ['id', 'code', 'hospital_id']}
 
-            # -----------------------------
-            # 2️⃣ Gestion Soft Delete
-            # -----------------------------
-            if remote_deleted:
-                local_obj.delete()
-                return "success"
-
-            # -----------------------------
-            # 3️⃣ Gestion Conflit
-            # -----------------------------
-            local_updated_at = local_obj.updated_at.isoformat()
-
-            if remote_updated_at < local_updated_at:
-                logger.warning(
-                    f"Conflit détecté ID {remote_id}"
-                )
-                return "conflicts"
-
-            # -----------------------------
-            # 4️⃣ Mise à jour normale
-            # -----------------------------
-            for field, value in remote_data.items():
-                if field in [f.name for f in Model._meta.fields]:
-                    setattr(local_obj, field, value)
-
-            local_obj.save()
-            return "success"
-
-        except Exception as e:
-            logger.exception(f"Erreur sync objet ID {remote_id}: {e}")
-            return "failed"
+    def get_sync_status(self):
+        return {
+            'last_upload': self.config.last_sync_upload,
+            'last_download': self.config.last_sync_download,
+            'pending_uploads': SyncLog.objects.filter(direction='UPLOAD', status='PENDING').count(),
+            'pending_downloads': SyncLog.objects.filter(direction='DOWNLOAD', status='PENDING').count(),
+        }
