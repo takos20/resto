@@ -23,8 +23,17 @@ class SyncViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
     filterset_class = SyncConfigFilter
     filter_backends = (filters.DjangoFilterBackend,)
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        permission_class = [IsAuthenticated]
+        if self.action in ['upload', 'download', 'full_sync']:
+            permission_class = [AllowAny]
+        return [permission() for permission in permission_class]
     
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request):
         """Lancer une synchronisation upload (local → remote)"""
         hospital_id = request.data.get('hospital_id')
@@ -50,7 +59,7 @@ class SyncViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], url_path='download')
     def download(self, request):
         """Lancer une synchronisation download (remote → local)"""
         hospital_id = request.data.get('hospital_id')
@@ -76,7 +85,7 @@ class SyncViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], url_path='full_sync')
     def full_sync(self, request):
         """Synchronisation complète (bidirectionnelle)"""
         hospital_id = request.data.get('hospital_id')
