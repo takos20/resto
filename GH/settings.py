@@ -120,7 +120,7 @@ import dj_database_url
 #         'PORT': env('DB_PORT_2')
 #     }
 # }
-SYNC_SECRET_KEY = env("SYNC_SECRET_KEY")
+SYNC_SECRET_KEY = os.environ.get("SYNC_SECRET_KEY")
 DATABASES = {
     "default": dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
