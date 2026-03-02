@@ -102,7 +102,7 @@ class HospitalSerializer(DynamicFieldsModelSerializer):
         fields = '__all__'
 
 class ContentTypeSerializer(DynamicFieldsModelSerializer):
-    hospital = HospitalSerializer(many=False, fields=('id', 'name'))
+    # hospital = HospitalSerializer(many=False, fields=('id', 'name'))
     """
     Bifrost patient writable nested serializer
     """
@@ -747,7 +747,7 @@ class DishSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Dish
-        fields = ["id", "code","name","name_language", "price", "category", "is_delivery", "preparation_time", "cost", "createdAt"]
+        fields = ["id", "code","name","name_language", "price", "category", "is_delivery","is_active", "preparation_time", "cost", "createdAt"]
 
     def get_category(self, obj):
         request = self.context.get('request')
@@ -1049,7 +1049,7 @@ class DetailsInventorySerializer(DynamicFieldsModelSerializer):
         fields = '__all__'
 
 class HistorySerializer(DynamicFieldsModelSerializer):
-    hospital = HospitalSerializer(many=False, fields=('id', 'name'))
+    # hospital = HospitalSerializer(many=False, fields=('id', 'name'))
     """
     Bifrost patient writable nested serializer
     """
@@ -1057,7 +1057,7 @@ class HistorySerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = History
-        fields = ('is_shared','hospital','id', 'user', 'action', 'created_at', 'table_name')
+        fields = ('id', 'user', 'action', 'created_at', 'table_name')
 
 
 class DishPreparationSerializer(DynamicFieldsModelSerializer):

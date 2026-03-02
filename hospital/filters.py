@@ -5,7 +5,8 @@ from hospital.models import DetailsBillsIngredient, DetailsStock_movement, Exten
     DetailsBills,PatientSettlement, Inventory, DetailsInventory, City, Region, Module, Archive, BackupFile, DeliveryInfo, EventInfo, CateringInfo
 
 from hospital.models import Supplies, Suppliers
-
+from django.utils import timezone
+from datetime import datetime, time
 
 class UserFilter(django_filters.FilterSet):
     is_shared = django_filters.BooleanFilter(lookup_expr='exact')
@@ -80,8 +81,7 @@ class DetailsBillsIngredientFilter(django_filters.FilterSet):
         model = DetailsBillsIngredient
         fields = {'id': ['exact']}
 
-from django.utils import timezone
-from datetime import datetime, time
+
 class MovementStockFilter(django_filters.FilterSet):
     is_shared = django_filters.BooleanFilter(lookup_expr='exact')
     hospital = django_filters.CharFilter(field_name='hospital__id', lookup_expr='exact')
@@ -172,6 +172,7 @@ class Cash_movementFilter(django_filters.FilterSet):
 
 
 class Type_patientFilter(django_filters.FilterSet):
+    is_default = django_filters.BooleanFilter(lookup_expr='exact')
     is_shared = django_filters.BooleanFilter(lookup_expr='exact')
     hospital = django_filters.CharFilter(field_name='hospital__id', lookup_expr='exact')
     title = django_filters.CharFilter(lookup_expr='icontains')

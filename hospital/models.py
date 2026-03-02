@@ -415,6 +415,7 @@ class Type_patient(models.Model):
     code = models.CharField(max_length=255, null=True, blank=True, default=add_type_patient, unique=True)
     title = models.CharField(max_length=255, null=True, blank=True)
     createdAt = models.DateField(auto_now_add=True, verbose_name="Created Date")
+    is_default = models.BooleanField(default=False)
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
@@ -2059,6 +2060,7 @@ class PromotionAction(models.Model):
         ordering = ('-id',)
 
 class StructureArticle(models.Model):
+    is_shared = models.BooleanField(default=False, null=True)  # Partagé entre structures
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, null=True)
     dish = models.ForeignKey(Dish, on_delete=models.CASCADE, null=True, related_name='prices')
     is_active = models.BooleanField(default=True, null=True)  # Partagé entre structures
@@ -2071,3 +2073,27 @@ class StructureArticle(models.Model):
         unique_together=('hospital', 'dish')
         db_table = 'structure_article'
         ordering = ('-id',)
+# from track_actions import constants
+# class History(models.Model):
+#     """History model to store user actions"""
+#     is_shared = models.BooleanField(default=False, null=True)  # Partagé entre structures
+#     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, null=True)
+#     table_name = models.CharField(max_length=255, blank=False, editable=False)
+#     user = models.ForeignKey(User, on_delete=models.PROTECT, null=True)
+#     created_at = models.DateTimeField(auto_now_add=True, editable=False)
+#     instance_id = models.CharField(
+#         max_length=255, null=False, blank=False, editable=False
+#     )
+#     action = models.CharField(
+#         max_length=7,
+#         null=False,
+#         blank=False,
+#         choices=constants.track_actions,
+#         editable=False,
+#     )
+#     path = models.CharField(max_length=255, default="", blank=False, editable=False)
+#     request_data = models.TextField(default="", editable=False)
+#     response_data = models.TextField(default="", editable=False)
+
+#     class Meta:
+#         verbose_name_plural = "History model"

@@ -25,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
-import dj_database_url
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 # Application definition
@@ -56,18 +56,20 @@ INSTALLED_APPS = [
     'dbbackup',
     'crispy_forms',
     'mathfilters',
+    'django_celery_beat',
     'hospital.apps.HospitalConfig',
     'restaurants.apps.RestaurantsConfig',
+    'sync.apps.SyncConfig',
 
 ]
-# DBBACKUP_FILENAME_TEMPLATE = '{servername}-{datetime}.sql'
-# # DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
-# DBBACKUP_STORAGE_OPTIONS = {'location': env('DBBACKUP_STORAGE_OPTIONS')}
+DBBACKUP_FILENAME_TEMPLATE = '{servername}-{datetime}.sql'
+# DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+DBBACKUP_STORAGE_OPTIONS = {'location': env('DBBACKUP_STORAGE_OPTIONS')}
 APPEND_SLASH = False
-# BACKUP_STORAGE_FOLDER = env('BACKUP_STORAGE_FOLDER')
-# DBBACKUP_STORAGE_FOLDER = env('DBBACKUP_STORAGE_FOLDER')
-# DBBACKUP_ALL = env('DBBACKUP_ALL')
-# FOLDER_DUMPBATA = env('FOLDER_DUMPBATA')
+BACKUP_STORAGE_FOLDER = env('BACKUP_STORAGE_FOLDER')
+DBBACKUP_STORAGE_FOLDER = env('DBBACKUP_STORAGE_FOLDER')
+DBBACKUP_ALL = env('DBBACKUP_ALL')
+FOLDER_DUMPBATA = env('FOLDER_DUMPBATA')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -105,24 +107,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'GH.wsgi.application'
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = 'Africa/Douala'
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'yummy',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': '127.0.0.1',
+        'PORT': env('DB_PORT_2')
+    }
 }
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'yummy3',
-#         'USER': 'postgres',
-#         'PASSWORD': 'postgres',
-#         'HOST': '127.0.0.1',
-#         'PORT': env('DB_PORT')
-#     }
-# }
         #'HOST': '172.31.224.1',
 
 # Database
@@ -236,51 +233,51 @@ SIMPLE_JWT = {
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 
-# LOGGING = {
-#     'version': 1,
-#     'disable_existing_loggers': False,
-#     'formatters': {
-#         'large': {
-#             'format': '%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s  %(lineno)d  %(message)s  '
-#         },
-#         'tiny': {
-#             'format': '%(asctime)s  %(message)s  '
-#         }
-#     },
-#     'handlers': {
-#         'access_file': {
-#             'class': 'logging.FileHandler',
-#             'filename': os.path.join(LOG_DIR, "access.logs"),
-#             'formatter': 'large',
-#         },
-#         'errors_file': {
-#             'level': 'ERROR',
-#             'class': 'logging.FileHandler',
-#             'filename': os.path.join(LOG_DIR, "errors.logs"),
-#             'formatter': 'large',
-#         },
-#         'http_client_file': {
-#             'level': 'INFO',
-#             'class': 'logging.FileHandler',
-#             'filename': os.path.join(LOG_DIR, "http_client.logs"),
-#             'formatter': 'large',
-#         },
-#     },
-#     'loggers': {
-#         'access_file': {
-#             'handlers': ['access_file'],
-#             'level': 'INFO',
-#             'propagate': False,
-#         },
-#         'errors_file': {
-#             'handlers': ['errors_file'],
-#             'level': 'ERROR',
-#             'propagate': False,
-#         },
-#         'http_client_file': {
-#             'handlers': ['http_client_file'],
-#             'level': 'INFO',
-#             'propagate': False,
-#         },
-#     }
-# }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'large': {
+            'format': '%(asctime)s  %(levelname)s  %(process)d  %(pathname)s  %(funcName)s  %(lineno)d  %(message)s  '
+        },
+        'tiny': {
+            'format': '%(asctime)s  %(message)s  '
+        }
+    },
+    'handlers': {
+        'access_file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, "access.logs"),
+            'formatter': 'large',
+        },
+        'errors_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, "errors.logs"),
+            'formatter': 'large',
+        },
+        'http_client_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, "http_client.logs"),
+            'formatter': 'large',
+        },
+    },
+    'loggers': {
+        'access_file': {
+            'handlers': ['access_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'errors_file': {
+            'handlers': ['errors_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'http_client_file': {
+            'handlers': ['http_client_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    }
+}

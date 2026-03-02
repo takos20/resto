@@ -296,10 +296,11 @@ class Type_patientForm(forms.ModelForm):
     is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
     hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
     title = forms.CharField(max_length=255, required=True)
+    is_default = forms.BooleanField(initial=False, required=False)
 
     class Meta:
         model = Type_patient
-        fields = ('is_shared','hospital','title',)
+        fields = ('is_shared','hospital','title','is_default')
 
 class PatientSettlementForm(forms.ModelForm):
     is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
@@ -490,16 +491,6 @@ class DetailsPatientAccountForm(forms.ModelForm):
     class Meta:
         model = DetailsPatientAccount
         fields = ('is_shared','hospital','balance', 'user','type_operation','patient_account')
-
-
-class Type_patientForm(forms.ModelForm):
-    is_shared = forms.BooleanField(initial=False, required=False)  # Partagé entre structures
-    hospital = forms.ModelChoiceField(required=False, queryset=Hospital.objects.all())
-    title = forms.CharField(max_length=255, required=True)
-
-    class Meta:
-        model = Type_patient
-        fields = ('is_shared','hospital','title',)
 
 
 class PatientForm(forms.ModelForm):

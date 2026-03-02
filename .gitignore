@@ -2,6 +2,7 @@
 .idea/
 __pycache__/
 db.sqlite3
+venv2/
 venv/
 static2/
 .env

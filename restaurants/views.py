@@ -209,6 +209,68 @@ class DishViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
         return Response(data=errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post', 'get'], url_path='sync_product_to_hospital')
+    def sync_product_to_hospital(self, request, *args, **kwargs):
+        
+        try:
+            product = self.request.query_params.get(product)
+            if product:
+                product = Product.objects.get(id=self.request.query_params.get(product))
+                if product.is_shared:
+                    hospital = self.request.query_params.get(hospital)
+                    if hospital:
+                        Product.objects.update_or_create(
+                                name=product.name,
+                                hospital=hospital,
+                                defaults={
+                                    'price': product.price,
+                                    # Copie d'autres champs ici
+                                }
+                            )
+
+                    else:
+
+                        for hospital in Hospital.objects.exclude(id=product.hospital_id):
+                            Product.objects.update_or_create(
+                                name=product.name,
+                                hospital=hospital,
+                                defaults={
+                                    'price': product.price,
+                                    # Copie d'autres champs ici
+                                }
+                            )
+            else:
+                products = Product.objects.all()
+                hospital = self.request.query_params.get(hospital)
+                if hospital:
+                    for product in products:
+                        if product.is_shared:
+                            Product.objects.update_or_create(
+                                    name=product.name,
+                                    hospital=hospital,
+                                    defaults={
+                                        'price': product.price,
+                                        # Copie d'autres champs ici
+                                    }
+                                )
+                else:
+                    for product in products:
+                        if product.is_shared:
+                            for hospital in Hospital.objects.exclude(id=product.hospital_id):
+                                Product.objects.update_or_create(
+                                    name=product.name,
+                                    hospital=hospital,
+                                    defaults={
+                                        'price': product.price,
+                                        # Copie d'autres champs ici
+                                    }
+                                )
+                    
+            return Response(status=status.HTTP_200_OK)
+        except Exception as e:
+            print("Error in creating", e)
+            return Response(data=e, status=status.HTTP_404_NOT_FOUND)
 
 class PromotionViewSet(viewsets.ModelViewSet):
     queryset = Promotion.objects.all()

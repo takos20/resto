@@ -478,7 +478,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['POST', 'GET'], url_path='contentTypes')
     def contentType(self, request):
 
-        contentType = ContentType.objects.filter(hospital = self.request.user.hospital,)
+        contentType = ContentType.objects.all()
         serializer = ContentTypeSerializer(contentType, many=True)
         content = {'content': serializer.data}
         # remove_model=['group', 'city', 'region', 'logentry', 'manufacturer', 'provider', 'price_level']
@@ -1678,9 +1678,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
             obj = category_form.save()
             obj.save()
             for translate in self.request.data['name_language']:
-                get_translate = CategoryTranslation.objects.filter(category_id=translate['category'], language=translate['language']).last()
+                get_translate = CategoryTranslation.objects.filter(category_id=obj.id, language=translate['language']).last()
                 if get_translate:
-                    get_translate.name = request.data['name']
+                    get_translate.name = translate['name']
                     get_translate.save()
                 else:
                     CategoryTranslation.objects.create(user=self.request.user, category_id=obj.id, language=translate['language'], name = translate['name'])
@@ -1692,8 +1692,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         obj = self.get_object()
-        obj.deleted = True
-        obj.save()
+        obj.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
  
     
@@ -5719,6 +5718,7 @@ class Type_patientViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         obj = self.get_object()
+        print(request.data)
         obj_form = Type_patientForm(request.data, instance=obj)
         if obj_form.is_valid():
             obj = obj_form.save()

@@ -6,6 +6,7 @@ from django.urls import re_path
 from django.views.static import serve
 from hospital.urls import urlpatterns as hospital_urlpatterns
 from restaurants.urls import urlpatterns as restaurant_urlpatterns
+from sync.urls import urlpatterns as sync_urlpatterns
 # from notification.urls import urlpatterns as notification_urlpatterns
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -18,4 +19,5 @@ urlpatterns += [
     }),
 ]
 urlpatterns += hospital_urlpatterns
+urlpatterns += sync_urlpatterns
 urlpatterns += restaurant_urlpatterns
