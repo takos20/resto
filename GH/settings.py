@@ -110,6 +110,17 @@ WSGI_APPLICATION = 'GH.wsgi.application'
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_TIMEZONE = 'Africa/Douala'
 import dj_database_url
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'yummy',
+#         'USER': 'postgres',
+#         'PASSWORD': 'postgres',
+#         'HOST': '127.0.0.1',
+#         'PORT': env('DB_PORT_2')
+#     }
+# }
+
 DATABASES = {
     "default": dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
