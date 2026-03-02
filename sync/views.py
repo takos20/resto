@@ -14,11 +14,72 @@ from .serializers import SyncLogSerializer, SyncConfigSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated, DjangoModelPermissions
 from rest_framework.renderers import JSONRenderer
 from django_filters import rest_framework as filters
+from django.apps import apps
 
 class SyncViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
 
+
+    @action(detail=False, methods=["get"], url_path=r'(?P<model>[^/.]+)')
+    def sync_model(self, request, model=None):
+        """
+        Dispatcher générique avec models format: ["hospital.Region"]
+        GET /api/v1/sync/region/
+        """
+        hospital_id = request.query_params.get("hospital_id")
+        updated_since = request.query_params.get("updated_since")
+
+        if not hospital_id:
+            return Response({"error": "hospital_id requis"}, status=400)
+
+        try:
+            config = SyncConfig.objects.get(hospital_id=hospital_id)
+
+            # Chercher le modèle dans models_to_sync
+            model_name = model.capitalize()
+
+            model_path = None
+            for m in config.models_to_sync:
+                if m.endswith(f".{model_name}"):
+                    model_path = m
+                    break
+
+            if not model_path:
+                return Response(
+                    {"error": f"{model_name} non configuré dans SyncConfig"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Extraire app_label et model
+            app_label, model_cls = model_path.split(".")
+
+            Model = apps.get_model(app_label, model_cls)
+
+        except SyncConfig.DoesNotExist:
+            return Response({"error": "SyncConfig introuvable"}, status=404)
+
+        except LookupError:
+            return Response(
+                {"error": f"modèle {model_cls} introuvable dans {app_label}"},
+                status=404
+            )
+
+        try:
+            queryset = Model.objects.filter(hospital_id=hospital_id)
+
+            if updated_since:
+                queryset = queryset.filter(updatedAt__gt=updated_since)
+
+            data = [
+                {field.name: getattr(obj, field.name) for field in obj._meta.fields}
+                for obj in queryset
+            ]
+
+            return Response(data)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request):
         hospital_id = request.data.get('hospital_id')

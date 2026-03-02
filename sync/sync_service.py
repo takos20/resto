@@ -91,7 +91,7 @@ class SyncService:
             return {'skipped': 0, 'failed': 0, 'success': 0, 'conflicts': 0}
 
         results = {'success': 0, 'failed': 0, 'conflicts': 0, 'skipped': 0}
-
+        
         for model_name in self.config.models_to_sync:
             try:
                 model_results = self._download_model(model_name)
@@ -108,18 +108,22 @@ class SyncService:
         results = {'success': 0, 'failed': 0, 'conflicts': 0, 'skipped': 0}
 
         app_label, model = model_name.split(".")
+        print(model_name.split("."))
         Model = apps.get_model(app_label, model)
+        
+        
 
         last_sync = self.config.last_sync_download or timezone.now() - timedelta(days=365)
 
-        url = f"{self.config.remote_api_url}/sync/{model_name.lower()}/"
+        url = f"{self.config.remote_api_url}/sync/{model.lower()}"
         params = {
             'hospital_id': self.hospital_id,
             'updated_since': last_sync.isoformat(),
-            'is_shared': True
+            'is_shared': False
         }
 
         response = self.session.get(url, params=params)
+        print(url)
         if response.status_code != 200:
             results['failed'] += 1
             return results
