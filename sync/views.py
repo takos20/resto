@@ -78,7 +78,6 @@ class SyncViewSet(viewsets.ModelViewSet):
                 hospital_id=hospital_id,
                 config=config
             )
-            print(sync_service)
             results = sync_service.download_changes(force=force)
             
             return Response({

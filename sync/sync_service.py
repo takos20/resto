@@ -14,8 +14,17 @@ class SyncService:
     def __init__(self, hospital_id, config):
         self.hospital_id = hospital_id
         self.config = config
-        self.session = requests.Session()
+        self.session = self._create_session()
+    
+    def _create_session(self):
+        session = requests.Session()
 
+        session.headers.update({
+            "Authorization": f"Bearer {self.config.api_token}",
+            "Content-Type": "application/json"
+        })
+
+        return session
     def download_changes(self, force=False):
         """
         Télécharger les modifications du serveur distant
