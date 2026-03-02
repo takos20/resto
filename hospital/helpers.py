@@ -21,7 +21,13 @@ logger = logging.getLogger(__name__)
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
+from rest_framework.permissions import BasePermission
+from django.conf import settings
 
+class SyncPermission(BasePermission):
+
+    def has_permission(self, request, view):
+        return request.headers.get("X-SYNC-KEY") == settings.SYNC_SECRET_KEY
 # @transaction.atomic
 # def get_or_fix_stock(hospital, depot, ingredient=None, compose_ingredient=None):
 

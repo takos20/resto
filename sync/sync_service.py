@@ -18,12 +18,10 @@ class SyncService:
     
     def _create_session(self):
         session = requests.Session()
-
         session.headers.update({
-            "Authorization": f"Bearer {self.config.api_token}",
+            "X-SYNC-KEY": self.config.api_token,
             "Content-Type": "application/json"
         })
-
         return session
     def download_changes(self, force=False):
         """

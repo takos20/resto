@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 
 from globals.pagination import CustomPagination
+from hospital.helpers import SyncPermission
 from sync.filters import SyncConfigFilter, SyncLogFilter
 from sync.models import SyncConfig, SyncLog
 from .sync_service import SyncService
@@ -19,7 +20,7 @@ class SyncViewSet(viewsets.ModelViewSet):
     queryset = SyncConfig.objects.all()
     serializer_class = SyncConfigSerializer
     renderer_classes = [JSONRenderer]
-    permission_classes = (IsAuthenticated, DjangoModelPermissions)
+    permission_classes = [SyncPermission]
     pagination_class = CustomPagination
     filterset_class = SyncConfigFilter
     filter_backends = (filters.DjangoFilterBackend,)
