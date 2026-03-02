@@ -62,9 +62,9 @@ class SyncViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='download')
     def download(self, request):
         """Lancer une synchronisation download (remote → local)"""
-        hospital_id = request.data.get('hospital_id')
-        force = request.data.get('force', False)
-        
+        hospital_id = request.data.get("hospital_id")
+        force = request.data.get("force", False)
+            
         if not hospital_id:
             return Response(
                 {'error': 'hospital_id requis'},
@@ -72,7 +72,13 @@ class SyncViewSet(viewsets.ModelViewSet):
             )
         
         try:
-            sync_service = SyncService(hospital_id)
+            config = SyncConfig.objects.get(hospital_id=hospital_id)
+
+            sync_service = SyncService(
+                hospital_id=hospital_id,
+                config=config
+            )
+            print(sync_service)
             results = sync_service.download_changes(force=force)
             
             return Response({
