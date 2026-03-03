@@ -222,7 +222,6 @@ def add_region():
         
 def add_code(self, prefix, digit, model, hospital=None):
     last = model.objects.exclude(code__isnull=True).exclude(code='').order_by('-id').first()
-    print(last)
     last_code = last.code if last else None
 
     number = 1
@@ -253,6 +252,7 @@ class Hospital(models.Model):
     taxpayer = models.CharField(max_length=255, null=True, blank=True)
     email = models.EmailField(max_length=1255, blank=True, null=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     type_enterprise = models.CharField(max_length=255, choices=TYPE_ENTERPRISE, null=True, blank=True)
     # taux de TVA collectée concerne les ventes et est facturée aux clients avant d’être reversée à l’État
     VAT_collected = models.FloatField(default=0.0, null=True, blank=True)
@@ -281,6 +281,7 @@ class Region(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date", null=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     class Meta:
         db_table = 'region'
         ordering = ('-id',)
@@ -378,6 +379,7 @@ class District(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
 
     class Meta:
@@ -419,6 +421,7 @@ class Type_patient(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'type_patient'
@@ -458,6 +461,7 @@ class Expenses_nature(models.Model):
     account_number = models.CharField(max_length=255, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     createdAt = models.DateField(auto_now_add=True, verbose_name="Created Date")
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
@@ -503,6 +507,7 @@ class Category(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'categories'
@@ -548,6 +553,7 @@ class Insurance(models.Model):
     email = models.EmailField(max_length=1255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     createdAt = models.DateField(auto_now_add=True, verbose_name="Created Date")
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
@@ -624,6 +630,7 @@ class Patient(models.Model):
     code = models.CharField(max_length=255, blank=True, default=add_patient, unique=True)
     email = models.EmailField(max_length=255, blank=True, null=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     @property
     def balance(self):
@@ -661,6 +668,7 @@ class User(AbstractUser):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updateAt = models.DateTimeField(auto_now_add=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     # objects = UserManager()
 
@@ -692,6 +700,7 @@ class Cash(models.Model):
     cash_fund = models.IntegerField(default=0, null=True)
     balance = models.IntegerField(default=0)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     is_transfer = models.BooleanField(default=False)
     type_cash = models.CharField(max_length=255, choices=TYPE_CASH, null=True, blank=True)
     is_active = models.BooleanField(default=True, db_column='is_active')
@@ -722,6 +731,8 @@ class CategoryTranslation(models.Model):
     language = models.CharField(max_length=5)  # 'fr', 'en'
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'category_translation'
@@ -738,6 +749,7 @@ class Storage_depots(models.Model):
     is_active = models.BooleanField(default=True)
     is_default = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     createdAt = models.DateField(auto_now_add=True, null=True, blank=True, verbose_name="Created Date")
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
@@ -761,6 +773,8 @@ class WarehouseTranslation(models.Model):
     language = models.CharField(max_length=5)  # 'fr', 'en'
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'warehouse_translation'
@@ -812,6 +826,7 @@ class Stock_movement(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
 
     def save(self, *args, **kwargs):
@@ -881,6 +896,7 @@ class Bills(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     deletedAt = models.DateTimeField(auto_now_add=True, verbose_name="Delete Date")
 
     def _generate_code(self):
@@ -926,7 +942,9 @@ class DeliveryInfo(models.Model):
     expected_time = models.DateTimeField(null=True, blank=True)
     delivered = models.BooleanField(default=False)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
-    updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date") 
+    updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True) 
 
     class Meta:
         db_table = "delivery"
@@ -946,7 +964,9 @@ class CateringInfo(models.Model):
 
     contact_person = models.CharField(max_length=100)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
-    updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date") 
+    updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = "catering"
@@ -970,6 +990,8 @@ class EventInfo(models.Model):
     paid = models.BooleanField(default=False)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date") 
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = "event"
@@ -1000,6 +1022,8 @@ class Ingredient(models.Model):
     last_paid_price = models.DecimalField(max_digits=12, decimal_places=1, default=0, null=True)  # dernier prix d'achat
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")    
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     @property
     def quantity_per_depot(self):
@@ -1060,6 +1084,8 @@ class IngredientTranslation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     language = models.CharField(max_length=5)  # 'fr', 'en'
     name = models.CharField(max_length=255)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
 
     class Meta:
@@ -1090,6 +1116,8 @@ class Dish(models.Model):
     price = models.FloatField(default=0)  # prix de vente
     preparation_time = models.IntegerField(default=0)  # en minutes
     is_active = models.BooleanField(default=True)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     is_delivery = models.BooleanField(default=True, null=True)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
@@ -1120,6 +1148,8 @@ class DishTranslation(models.Model):
     language = models.CharField(max_length=5)  # 'fr', 'en'
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'dish_translation'
@@ -1132,6 +1162,8 @@ class Recipes(models.Model):
     # hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, null=True)
     dish = models.OneToOneField(Dish, on_delete=models.CASCADE, null=True)
     total_amount = models.FloatField(default=0.0, null=True, blank=True)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
@@ -1150,6 +1182,8 @@ class ComposeIngredient(models.Model):
     stock_quantity = models.FloatField(default=0, null=True,)  # quantité en unité
     price_per_unit = models.DecimalField(max_digits=12, decimal_places=1, default=0, null=True)
     total_amount = models.FloatField(default=0.0, null=True, blank=True)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     
@@ -1165,6 +1199,8 @@ class ComposeIngredientTranslation(models.Model):
     language = models.CharField(max_length=5)  # 'fr', 'en'
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'compose_ingredient_translation'
@@ -1179,6 +1215,7 @@ class DishPreparation(models.Model):
     # ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE, null=True)
     # compose_ingredient = models.ForeignKey(ComposeIngredient, on_delete=models.CASCADE, null=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     quantity = models.IntegerField(default=1)  # nombre de portions préparées
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
@@ -1216,6 +1253,7 @@ class Stock(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'stock'
@@ -1246,6 +1284,7 @@ class ComposePreparation(models.Model):
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, null=True)
     compose_ingredient = models.ForeignKey(ComposeIngredient, on_delete=models.CASCADE, null=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     stock_quantity = models.FloatField(default=0, null=True,)  # nombre de portions préparées
     total_amount = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'))
@@ -1265,6 +1304,8 @@ class ComposePreparationTranslation(models.Model):
     language = models.CharField(max_length=5)  # 'fr', 'en'
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'compose_preparation_translation'
@@ -1277,6 +1318,7 @@ class DetailsComposePreparation(models.Model):
     compose_ingredient = models.ForeignKey(ComposeIngredient, on_delete=models.CASCADE, related_name='composes', null=True)
     compose_preparation = models.ForeignKey(ComposePreparation, on_delete=models.CASCADE, related_name='compose_preparations', null=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'))
     cost = models.DecimalField(max_digits=12, decimal_places=3, default=Decimal('0.000'))
@@ -1325,6 +1367,8 @@ class RecipeIngredient(models.Model):
     quantity = models.FloatField()  # quantité par portion
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     @property
     def cost(self):
@@ -1375,6 +1419,8 @@ class DetailsComposeIngredient(models.Model):
     quantity = models.FloatField()  # quantité par portion
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     @property
     def cost(self):
@@ -1400,6 +1446,8 @@ class Promotion(models.Model):
     cumulative = models.BooleanField(default=False)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'promotion'
@@ -1428,6 +1476,7 @@ class DetailsBills(models.Model):
     promotion = models.ForeignKey(Promotion, on_delete=models.CASCADE, null=True, blank=True)
     margin = models.FloatField(default=0.0, null=True, blank=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     createdAt = models.DateField(auto_now_add=True, null=True, blank=True)
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     deletedAt = models.DateTimeField(auto_now_add=True, verbose_name="Delete Date")
@@ -1468,6 +1517,7 @@ class Suppliers(models.Model):
     name_representative = models.CharField(max_length=255, null=True, blank=True)
     phone_representative = models.CharField(max_length=255, null=True, blank=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     createdAt = models.DateField(auto_now_add=True, null=True, blank=True, verbose_name="Created Date")
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
@@ -1497,6 +1547,7 @@ class Inventory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
 
 
@@ -1541,6 +1592,7 @@ class Purchase_order(models.Model):
     is_received = models.BooleanField(default=False)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
 
 
@@ -1585,6 +1637,7 @@ class Supplies(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     
     def save(self, *args, **kwargs):
@@ -1631,6 +1684,7 @@ class DetailsStock_movement(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         unique_together = ('stock_movement','ingredient')
@@ -1654,6 +1708,7 @@ class DetailsInventory(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         unique_together = ('inventory','ingredient')
@@ -1680,6 +1735,7 @@ class Cash_movement(models.Model):
     amount_movement = models.IntegerField(default=0)
     difference = models.IntegerField(default=0)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     createdAt = models.DateField(auto_now_add=True, null=True, blank=True, verbose_name="Created Date")
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
@@ -1736,6 +1792,8 @@ class PatientAccount(models.Model):
     createdAt = models.DateField(auto_now_add=True, null=True, blank=True)
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     
     class Meta:
         db_table = 'patient_account'
@@ -1762,6 +1820,8 @@ class DetailsBillsIngredient(models.Model):
     impact_price = models.FloatField(default=0.0, null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     
     class Meta:
         db_table = 'details_bills_ingredient'
@@ -1788,6 +1848,8 @@ class DetailsPatientAccount(models.Model):
     createdAt = models.DateField(auto_now_add=True, null=True, blank=True)
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     
     class Meta:
         indexes = [
@@ -1820,6 +1882,7 @@ class PatientSettlement(models.Model):
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deletedAt = models.DateTimeField(auto_now_add=True, verbose_name="Delete Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     phone_number = models.IntegerField(default=0, null=True, blank=True)
     bank_card_number = models.IntegerField(default=0, null=True, blank=True)
     transaction_ref_bank_card = models.IntegerField(default=0, null=True, blank=True)
@@ -1867,6 +1930,7 @@ class Module(models.Model):
     createdAt = models.DateField(auto_now_add=True, null=True, blank=True)
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     deletedAt = models.DateTimeField(null=True, blank=True)
 
     # objects = UserManager()
@@ -1889,6 +1953,7 @@ class Archive(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'archive'
@@ -1905,6 +1970,7 @@ class BackupFile(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'backup_file'
@@ -1933,6 +1999,7 @@ class DetailsSupplies(models.Model):
     timeAt = models.TimeField(auto_now_add=True, null=True, blank=True)
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
     deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         unique_together = ('supplies','ingredient')
@@ -1960,6 +2027,8 @@ class MovementStock(models.Model):
     reference_id = models.IntegerField(null=True)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'movement_stock'
@@ -2011,6 +2080,8 @@ class PromotionTranslation(models.Model):
     description = models.TextField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'promotion_translation'
@@ -2034,6 +2105,8 @@ class PromotionRule(models.Model):
     end_hour = models.TimeField(null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'promotion_rule'
@@ -2043,6 +2116,8 @@ class PromotionAction(models.Model):
     is_shared = models.BooleanField(default=False, null=True)  # Partagé entre structures
     hospital = models.ForeignKey(Hospital, on_delete=models.CASCADE, null=True)
     promotion = models.ForeignKey(Promotion, on_delete=models.CASCADE)
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     ACTIONS = (
         ('PERCENT', 'Pourcentage'),
@@ -2067,6 +2142,8 @@ class StructureArticle(models.Model):
     price = models.FloatField()  # 50% ou 100% ou 2000 FCFA
     createdAt = models.DateTimeField(auto_now_add=True, verbose_name="Created Date")
     updatedAt = models.DateTimeField(auto_now=True, verbose_name="Updated Date")
+    deleted = models.BooleanField(default=False)
+    deletedAt = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     
     class Meta:

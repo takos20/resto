@@ -15,8 +15,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, DjangoModelPer
 from rest_framework.renderers import JSONRenderer
 from django_filters import rest_framework as filters
 from django.apps import apps
-
+from rest_framework.response import Response
+from django.utils.dateparse import parse_datetime
+from django.core.paginator import Paginator
 class SyncViewSet(viewsets.ViewSet):
+    authentication_classes = []
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend]
 
@@ -26,12 +29,13 @@ class SyncViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["get"], url_path=r'(?P<model>[^/.]+)')
     def sync_model(self, request, model=None):
-        """
-        Dispatcher générique avec models format: ["hospital.Region"]
-        GET /api/v1/sync/region/
-        """
+
         hospital_id = request.query_params.get("hospital_id")
         updated_since = request.query_params.get("updated_since")
+        page_number = request.query_params.get("page", 1)
+        limit = int(request.query_params.get("limit", 500))
+
+        api_key = request.headers.get("X-API-KEY")
 
         if not hospital_id:
             return Response({"error": "hospital_id requis"}, status=400)
@@ -39,7 +43,10 @@ class SyncViewSet(viewsets.ViewSet):
         try:
             config = SyncConfig.objects.get(hospital_id=hospital_id)
 
-            # Chercher le modèle dans models_to_sync
+            # 🔐 Vérification API KEY
+            if not api_key or api_key != config.api_token:
+                return Response({"error": "Unauthorized"}, status=401)
+
             model_name = model.capitalize()
 
             model_path = None
@@ -49,40 +56,44 @@ class SyncViewSet(viewsets.ViewSet):
                     break
 
             if not model_path:
-                return Response(
-                    {"error": f"{model_name} non configuré dans SyncConfig"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
+                return Response({"error": "Model non autorisé"}, status=404)
 
-            # Extraire app_label et model
             app_label, model_cls = model_path.split(".")
-
             Model = apps.get_model(app_label, model_cls)
 
         except SyncConfig.DoesNotExist:
             return Response({"error": "SyncConfig introuvable"}, status=404)
 
-        except LookupError:
-            return Response(
-                {"error": f"modèle {model_cls} introuvable dans {app_label}"},
-                status=404
-            )
+        # =========================
+        # FILTRAGE
+        # =========================
 
-        try:
-            queryset = Model.objects.filter(hospital_id=hospital_id)
+        queryset = Model.objects.filter(hospital_id=hospital_id)
 
-            if updated_since:
-                queryset = queryset.filter(updatedAt__gt=updated_since)
+        if updated_since:
+            parsed_date = parse_datetime(updated_since)
+            if parsed_date:
+                queryset = queryset.filter(updatedAt__gt=parsed_date)
 
-            data = [
-                {field.name: getattr(obj, field.name) for field in obj._meta.fields}
-                for obj in queryset
-            ]
+        queryset = queryset.order_by("updatedAt")
 
-            return Response(data)
+        # =========================
+        # PAGINATION
+        # =========================
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        paginator = Paginator(queryset, limit)
+        page = paginator.get_page(page_number)
+
+        data = list(page.object_list.values())
+
+        return Response({
+            "count": paginator.count,
+            "total_pages": paginator.num_pages,
+            "current_page": page.number,
+            "has_next": page.has_next(),
+            "has_previous": page.has_previous(),
+            "results": data
+        })
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request):
         hospital_id = request.data.get('hospital_id')

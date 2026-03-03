@@ -19,7 +19,7 @@ class SyncService:
     def _create_session(self):
         session = requests.Session()
         session.headers.update({
-            "Authorization": f"Bearer {self.config.api_token}",
+            "X-API-KEY": self.config.api_token,
             "Content-Type": "application/json"
         })
         return session
@@ -123,7 +123,6 @@ class SyncService:
         }
 
         response = self.session.get(url, params=params)
-        print(response)
         if response.status_code != 200:
             results['failed'] += 1
             return results
