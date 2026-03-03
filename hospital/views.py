@@ -1136,14 +1136,7 @@ class CashViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='isOpen')
     def is_open(self, request, *args, **kwargs):
         user = self.request.user
-        bills = Bills.objects.filter(cash__user=user.id).all()
-        for bill in bills:
-            Bills.objects.filter(id=bill.id).update(cash_code=bill.cash.code, patient_name=bill.patient.name, cashier_name=bill.cash.user.username)
-
-        if DetailsBills.objects.filter(cash__user_id=user.id, bills_id=None).all():
-            DetailsBills.objects.filter(cash__user_id=user.id, bills_id=None).all().delete()
-        get_cash = Cash.objects.filter(hospital=self.request.user.hospital,user_id=user.id, is_active=True, type_cash='CASH_COUNTERS').last()
-        get_hospital = self.request.user.hospital
+        get_cash = Cash.objects.filter(hospital=user.hospital,user_id=user.id, is_active=True, type_cash='CASH_COUNTERS').last()
         if get_cash:
             content = {'content': {'is_active': True, 'is_inventory': False}}
             return Response(data=content, status=status.HTTP_200_OK)
