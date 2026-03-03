@@ -114,6 +114,7 @@ class SyncService:
         
 
         last_sync = self.config.last_sync_download or timezone.now() - timedelta(days=365)
+        print(last_sync)
 
         url = f"{self.config.remote_api_url}/sync/{model.lower()}"
         params = {
@@ -123,6 +124,7 @@ class SyncService:
         }
 
         response = self.session.get(url, params=params)
+        print(response.json())
         if response.status_code != 200:
             results['failed'] += 1
             return results

@@ -19,6 +19,8 @@ class IngredientFilter(django_filters.FilterSet):
 
 
 class DishFilter(django_filters.FilterSet):
+    is_active = django_filters.BooleanFilter(lookup_expr='exact')
+    is_delivery = django_filters.BooleanFilter(lookup_expr='exact')
     is_shared = django_filters.BooleanFilter(lookup_expr='exact')
     hospital = django_filters.CharFilter(field_name='hospital__id', lookup_expr='exact')
     code = django_filters.CharFilter(lookup_expr='icontains')

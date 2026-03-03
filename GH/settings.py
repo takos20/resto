@@ -116,7 +116,7 @@ import dj_database_url
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'yummy',
+#         'NAME': 'yummy2',
 #         'USER': 'postgres',
 #         'PASSWORD': 'postgres',
 #         'HOST': '127.0.0.1',
