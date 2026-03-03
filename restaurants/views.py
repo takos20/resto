@@ -108,7 +108,7 @@ class DishViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='all')
     def get_all_dishes(self, request, *args, **kwargs):
 
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset()).filter(is_active=True)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
