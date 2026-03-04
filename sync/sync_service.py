@@ -108,13 +108,11 @@ class SyncService:
         results = {'success': 0, 'failed': 0, 'conflicts': 0, 'skipped': 0}
 
         app_label, model = model_name.split(".")
-        print(model_name.split("."))
         Model = apps.get_model(app_label, model)
         
         
 
         last_sync = self.config.last_sync_download or timezone.now() - timedelta(days=365)
-        print(last_sync)
 
         url = f"{self.config.remote_api_url}/sync/{model.lower()}"
         params = {
@@ -124,6 +122,7 @@ class SyncService:
         }
 
         response = self.session.get(url, params=params)
+        print(response.status_code)
         print(response.json())
         if response.status_code != 200:
             results['failed'] += 1

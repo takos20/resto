@@ -18,7 +18,7 @@ from hospital.forms import DetailsBillsIngredientForm, DetailsInventoryForm, Det
     CashForm, Cash_movementForm, CategoryForm,\
     SuppliesForm, SuppliersForm, DetailsSuppliesForm, BillsForm, DetailsBillsForm,PatientSettlementForm, \
     InventoryForm
-from hospital.models import CategoryTranslation, ComposeIngredient, DetailsBillsIngredient, DetailsStock_movement, DishPreparation, DishTranslation, ExtendedPermission, DetailsPatientAccount, ExtendedGroup, Ingredient, MovementStock, PatientAccount, RecipeIngredient, District, Insurance, Stock, Storage_depots, Type_patient, User, Hospital, Patient, \
+from hospital.models import CategoryTranslation, ComposeIngredient, ComposePreparation, DetailsBillsIngredient, DetailsComposeIngredient, DetailsStock_movement, DishPreparation, DishTranslation, ExtendedPermission, DetailsPatientAccount, ExtendedGroup, Ingredient, MovementStock, PatientAccount, RecipeIngredient, District, Insurance, Stock, Storage_depots, Type_patient, User, Hospital, Patient, \
     Expenses_nature,  Cash, Cash_movement, Category, Supplies, Suppliers, \
     DetailsSupplies, Bills, DetailsBills,PatientSettlement, Stock_movement, \
     Inventory, DetailsInventory, City, Region, \
@@ -3637,10 +3637,37 @@ class BillViewSet(viewsets.ModelViewSet):
                 for details in get_details_bills:
                     get_details_ingredient = DetailsBillsIngredient.objects.filter(hospital = user.hospital, details_bills_id = details.id).all()
                     for ingredient in get_details_ingredient:
-                        get_ingredient = Ingredient.objects.filter(hospital = user.hospital, id = ingredient.ingredient.id).last()
-                        get_ingredient.stock_quantity += ingredient.quantity
-                        get_ingredient.save()
-                        DetailsSupplies.objects.create(hospital = self.request.user.hospital, supplies_id=save_mvt_entry.id, ingredient_id=ingredient.id, quantity=ingredient.quantity)
+                        if ingredient.ingredient:
+                            get_ingredient = Stock.objects.filter(hospital = user.hospital, ingredient_id = ingredient.ingredient.id).last()
+                            if get_ingredient:
+                                get_ingredient.quantity += Decimal(ingredient.quantity)
+                                get_ingredient.save()
+                            get_detail=DetailsSupplies.objects.filter(hospital = self.request.user.hospital, supplies_id=save_mvt_entry.id, ingredient_id=ingredient.ingredient.id).last()
+                            if get_detail:
+                                get_detail.quantity += ingredient.quantity
+                                get_detail.save()
+                            else:
+                                DetailsSupplies.objects.create(hospital = self.request.user.hospital, supplies_id=save_mvt_entry.id, ingredient_id=ingredient.ingredient.id, quantity=ingredient.quantity)
+                        else:
+                            get_ingredient = Stock.objects.filter(hospital = user.hospital, compose_ingredient_id = ingredient.compose_ingredient.id).last()
+                            if get_ingredient:
+                                get_ingredient.quantity += ingredient.quantity
+                                get_ingredient.save()
+                            get_ingredient_preparation = ComposePreparation.objects.filter(hospital = user.hospital, compose_ingredient_id = ingredient.compose_ingredient.id).last()
+                            if get_ingredient_preparation:
+                                get_ingredient_preparation.stock_quantity += ingredient.quantity
+                                get_ingredient_preparation.save()
+                            get_details_ingredient = DetailsComposeIngredient.objects.filter(compose_ingredient_id = ingredient.compose_ingredient.id).all()
+                            for ingredient in get_details_ingredient:
+                                get_ingredient = Stock.objects.filter(hospital = user.hospital, ingredient_id = ingredient.ingredient.id).last()
+                                get_ingredient.quantity += ingredient.quantity
+                                get_ingredient.save()
+                                get_detail=DetailsSupplies.objects.filter(hospital = self.request.user.hospital, supplies_id=save_mvt_entry.id, ingredient_id=ingredient.ingredient.id).last()
+                                if get_detail:
+                                    get_detail.quantity += ingredient.quantity
+                                    get_detail.save()
+                                else:
+                                    DetailsSupplies.objects.create(hospital = self.request.user.hospital, supplies_id=save_mvt_entry.id, ingredient_id=ingredient.ingredient.id, quantity=ingredient.quantity)
                     details.deleted = True
                     details.deletedAt = timezone.now()
                     details.save()
